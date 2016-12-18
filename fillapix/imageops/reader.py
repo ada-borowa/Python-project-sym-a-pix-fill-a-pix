@@ -32,12 +32,11 @@ class FillAPixReader:
         :return: puzzle
         """
         self.rho_horizontal, self.rho_vertical = get_line_positions(self.img_gray)
-        puzzle = Container(len(self.rho_horizontal) - 1)
+        puzzle = Container((len(self.rho_horizontal) - 1, len(self.rho_vertical) - 1))
 
         for i in range(len(self.rho_horizontal) - 1):
             for j in range(len(self.rho_vertical) - 1):
-                img = self.cut_image(i, j)
-                puzzle.insert(img, i, j)
+                puzzle.insert(self.cut_image(i, j), i, j)
         return puzzle
 
     def cut_image(self, x, y):
