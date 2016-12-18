@@ -17,7 +17,7 @@ class Container:
            Size: width and height of puzzle
         """
         self.size = size
-        self.puzzle = np.zeros((size, size))
+        self.puzzle = np.zeros((size[0], size[1]))
         clf_file = '../../classificators/digit_clf.p'
         self.classifier = pickle.load(open(clf_file, 'rb'))
 
