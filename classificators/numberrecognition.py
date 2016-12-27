@@ -14,7 +14,7 @@ import pickle
 __author__ = 'Adriana Borowa'
 __email__ = 'ada.borowa@gmail.com'
 
-data_dir = '../labeled_numbers/'
+data_dir = 'numbers/'
 
 dirs = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '100']
 
