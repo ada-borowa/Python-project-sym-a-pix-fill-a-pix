@@ -47,3 +47,6 @@ class Container:
                 else:
                     txt += str(int(el)) + ' '
             print(txt)
+
+    def get_board(self):
+        return self.puzzle
