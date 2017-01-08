@@ -1,6 +1,5 @@
 import unittest
 
-from fillapix.imageops.reader import FillAPixReader
 from fillapix.solver.solver import FillAPixSolver
 import numpy as np
 
