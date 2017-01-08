@@ -50,7 +50,11 @@ def get_line_positions(img):
     :return: positions of horizontal and vertical lines
     """
     edges = cv2.Canny(img, 50, 150, apertureSize=3)
+
     lines = cv2.HoughLines(edges, 1, np.pi / 180, 200)
+    if lines is None:
+        lines = cv2.HoughLines(edges, 1, np.pi / 180, 100)
+
     rho_horizontal = []
     rho_vertical = []
     for row in lines:
@@ -62,6 +66,5 @@ def get_line_positions(img):
 
     rho_horizontal = get_unique_lines(rho_horizontal)
     rho_vertical = get_unique_lines(rho_vertical)
-    if not len(rho_horizontal) == len(rho_vertical):
-        raise IncorrectFileException
+
     return rho_horizontal, rho_vertical
