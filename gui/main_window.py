@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """ Main window of Sym-a-pix and Fill-a-pix solver/generator program.
 """
-import random
 
-import math
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import Qt
 import sys
 
+from fillapix.puzzle import container as fc
+from symapix.puzzle import container as sc
 from symapix.imageops.reader import SymAPixReader
 from symapix.solver.solver import SymAPixSolver
 from fillapix.imageops.reader import FillAPixReader
 from fillapix.solver.solver import FillAPixSolver
+from gui.generate_fill_dialog import GenerateFillDialog
+from gui.generate_sym_dialog import GenerateSymDialog
 
 __author__ = 'Adriana Borowa'
 __email__ = 'ada.borowa@gmail.com'
@@ -25,6 +27,8 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self):
         """Initialization of class."""
         super(MainWindow, self).__init__()
+        self.gfd = GenerateFillDialog(self)
+        self.gsd = GenerateSymDialog(self)
         self.status_bar = self.statusBar()
         self.l = QtGui.QVBoxLayout()
         self.content = QtGui.QVBoxLayout()
@@ -126,7 +130,11 @@ class MainWindow(QtGui.QMainWindow):
             self.status_bar.showMessage('Cannot read file: {}'.format(file_name.split('/')[-1]))
 
     def generate_sym(self):
-        print('Sym: Generating random.')
+        """Opens dialog where user can set size of puzzle to be generated."""
+        self.gsd.show()
+
+    def generate_new_sym(self, width, height, color):
+        print(width, height, color)
 
     def load_fill_from_file(self):
         """Loads fill-a-pix puzzle from file."""
@@ -145,7 +153,18 @@ class MainWindow(QtGui.QMainWindow):
             self.status_bar.showMessage('Cannot read file: {}'.format(file_name.split('/')[-1]))
 
     def generate_fill(self):
-        print('Fill: Generating random.')
+        """Opens dialog where user can set size of puzzle to be generated."""
+        self.gfd.show()
+
+    def generate_new_fill(self, width, height):
+        self.change_curr_game(2)
+        self.puzzle = fc.Container((height, width))
+        solution = self.puzzle.generate_random()
+        self.horizontal_lines, self.vertical_lines = width + 1, height + 1
+        self.solver = FillAPixSolver(self.puzzle)
+        self.game_size = self.solver.size
+        self.solver.set_solution(solution)
+        self.draw_game()
 
     def change_curr_game(self, game):
         """Sets value of label with current game."""
