@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """ Sym-a-pix: Solving puzzle
 """
+import random
 
 import numpy as np
 import math
-from itertools import product
+from itertools import permutations
+from time import time
+import copy
 
 __author__ = 'Adriana Borowa'
 __email__ = 'ada.borowa@gmail.com'
@@ -40,6 +43,15 @@ def wall_between(x, y, i, j):
         return [int((x + i) / 2.0), y]
 
 
+def squares_next_to(x, y):
+    """Returns 2 squares next to a wall."""
+    if x % 2 == 0:
+        return [[x, y - 1], [x, y + 1]]
+    elif y % 2 == 0:
+        return [[x - 1, y], [x + 1, y]]
+    return []
+
+
 class SymAPixSolver:
     """ Solver class. """
 
@@ -50,6 +62,7 @@ class SymAPixSolver:
             self.puzzle = puzzle.get_board()
         self.size = self.puzzle.shape
         self.solution = np.zeros(self.size, int)
+        self.user_solution = np.zeros(self.size, int)
         self.set_dots()
 
     def set_puzzle(self, array):
@@ -59,24 +72,31 @@ class SymAPixSolver:
         self.solution = np.zeros(self.size, int)
         self.set_dots()
 
+    def set_solution(self, array):
+        """Sets solution, only for generated puzzles"""
+        self.solution = array
+
     def set_dots(self):
         """Sets values in solution were dots are"""
         for i, row in enumerate(self.puzzle):
             for j, el in enumerate(row):
                 if el > 0:
                     self.solution[i, j] = -2
+                    self.user_solution[i, j] = -2
 
     def solve(self):
         """Main solver function"""
         self.init_fill()
-        for i in range(0, self.size[0]):
-            for j in range(0, self.size[1]):
-                if self.solution[i, j] == -2:
-                    self.find_symmetry(i, j, 1)
-        for i in range(0, self.size[0]):
-            for j in range(0, self.size[1]):
-                if self.solution[i, j] == -2:
-                    self.find_symmetry(i, j, 2)
+        self.mark_closed()
+        k_max = 2
+        while k_max < 3:
+            for k in range(1, k_max + 1):
+                for i in range(0, self.size[0]):
+                    for j in range(0, self.size[1]):
+                        if self.solution[i, j] == -2:
+                            self.find_symmetry(i, j, k)
+                self.mark_closed()
+            k_max += 1
 
     def init_fill(self):
         """Fills obvious lines between two dots."""
@@ -140,19 +160,107 @@ class SymAPixSolver:
                  for b in range(j1, j2 + 1)
                  if a in [i1, i2] or b in [j1, j2]]
         for (a, b) in frame:
-            print(x, y, a, b)
-            if a in [-1, self.size[0]] or \
-               b in [-1, self.size[1]] or \
-               0 <= a < self.size[0] and 0 <= b < self.size[1] and self.solution[a, b] == 1:
+            if self.is_wall(a, b):
                 new_a, new_b = symmetric_point(x, y, a, b)
-                print(x, y, a, b, new_a, new_b)
-                if 0 <= new_a < self.size[0] and 0 <= new_b < self.size[1] and\
+                if not self.is_wall_between(x, y, new_a, new_b) and\
+                   0 <= new_a < self.size[0] and 0 <= new_b < self.size[1] and\
                    self.solution[new_a, new_b] > -1:
-                    # print(new_a, new_b)
                     self.solution[new_a, new_b] = 1
 
+    def mark_closed(self):
+        for i in range(self.size[0]):
+            for j in range(self.size[1]):
+                if self.solution[i, j] == -2:
+                    hood, closed = self.is_closed(i, j)
+                    if closed:
+                        for pair in hood:
+                            if pair[0] % 2 == 0 and pair[1] % 2 == 0:
+                                if self.solution[pair[0], pair[1]] != -2:
+                                    self.solution[pair[0], pair[1]] = -3
+                                else:
+                                    self.solution[pair[0], pair[1]] = -4
+
+    def is_closed(self, x, y):
+        """Checks if region is closed and symmetrical,"""
+        i1, i2, j1, j2 = define_frame(x, y)
+        closest = [[a, b] for a in range(i1, i2 + 1)
+                   for b in range(j1, j2 + 1)
+                   if a in [i1, i2] or b in [j1, j2]]
+        walls_visited = []
+        hood = [[x, y]]
+        hood.extend([[a, b] for a in range(i1, i2 + 1)
+                    for b in range(j1, j2 + 1)
+                    if a not in [i1, i2] and b not in [j1, j2]])
+        while closest:
+            a, b = closest.pop()
+            walls_visited.append([a, b])
+            if self.is_wall(a, b):
+                c, d = symmetric_point(x, y, a, b)
+                if not self.is_wall(c, d):
+                    return hood, False
+            else:
+                options = squares_next_to(a, b)
+                for square in options:
+                    if square not in hood:
+                        hood.append(square)
+                        i1, i2, j1, j2 = define_frame(square[0], square[1])
+                        frame = [[a, b] for a in range(i1, i2 + 1)
+                                 for b in range(j1, j2 + 1)
+                                 if a in [i1, i2] or b in [j1, j2]]
+                        closest.extend([pair for pair in frame if pair not in walls_visited])
+        return hood, True
+
+    def is_wall(self, x, y):
+        if x in [-1, self.size[0]]:
+            return True
+        elif y in [-1, self.size[1]]:
+            return True
+        elif 0 < x < self.size[0] and 0 < y < self.size[1] and self.solution[x, y] == 1:
+            return True
+        return False
+
+    def is_wall_between(self, x, y, a, b):
+        """Checks if there already is a wall between two points."""
+        x_move = 2
+        if x > a:
+            x_move = -1
+        y_move = 2
+        if y > a:
+            y_move = -1
+        if x % 2 == 0:
+            if x < a:
+                x += 1
+            else:
+                x -= 1
+        if y % 2 == 0 and x % 2 > 0:
+            if y < b:
+                y += 1
+            else:
+                y -= 1
+        moves = permutations(np.hstack([np.zeros(int(max(0, math.fabs(x-a) - 1))),
+                                               np.ones(int(max(0, math.fabs(y-b) - 1)))]))
+        moves = list(set(moves))
+        if max(0, math.fabs(x-a) - 1) + max(0, math.fabs(y-b) - 1) > 0:
+            if len(moves) > 100:
+                moves = np.array(moves)
+                moves = moves[np.random.choice(len(moves), 100)]
+            for move in moves:
+                for i, m in enumerate(move):
+                    if m == 0:
+                        x += x_move
+                    elif m == 1:
+                        y += y_move
+                    if self.is_wall(x, y):
+                        return True
+        return False
+
     def is_solved(self):
-        pass
+        """Checks if puzzle is finished: if all squares are -2 or -3"""
+        for i in range(0, self.size[0], 2):
+            for j in range(0, self.size[1], 2):
+                if self.solution[i, j] > -2:
+                    return False
+        return True
 
     def correct_fill(self):
         pass
@@ -162,15 +270,12 @@ class SymAPixSolver:
         for i, row in enumerate(self.solution):
             txt = ''
             for j, el in enumerate(row):
-                if el == -2:
-                    if i % 2 == 0 and j % 2 == 0:
-                        txt += 'o '
-                    elif i % 2 == 0 and j % 2 > 0:
-                        txt += 'o '
-                    elif i % 2 > 0 and j % 2 == 0:
-                        txt += 'o '
-                    elif i % 2 > 0 and j % 2 > 0:
-                        txt += 'o '
+                if el == -4:
+                    txt += 'O '
+                elif el == -3:
+                    txt += 'x '
+                elif el == -2:
+                    txt += 'o '
                 elif el == -1:
                     if i % 2 == 0 and j % 2 == 0:
                         txt += '  '
@@ -200,3 +305,40 @@ class SymAPixSolver:
                         txt += '+ '
 
             print(txt)
+
+    def get_solution(self):
+        return self.solution
+
+    def get_user_solution(self):
+        return self.user_solution
+
+    def get_user_value(self, i, j):
+        return self.user_solution[i, j]
+
+    def set_user_value(self, x, y, val):
+        self.user_solution[x, y] = val
+
+    def set_solved(self):
+        self.user_solution = copy.deepcopy(self.solution)
+
+    def clear_user_solution(self):
+        self.user_solution = np.zeros(self.size, int)
+
+    def check_user_solution(self):
+        for i in range(self.size[0]):
+            for j in range(self.size[1]):
+                if self.solution[i, j] != self.user_solution[i, j] and self.user_solution[i, j] != 0:
+                    return i, j
+        return -1, -1
+
+    def is_solved_by_user(self):
+        """Checks if puzzle is solved by user."""
+        count = 0
+        for i in range(0, self.size[0]):
+            for j in range(0, self.size[1]):
+                if self.user_solution[i, j] != self.solution[i, j]:
+                    count += 1
+        if count == 0:
+            return True
+        else:
+            return False

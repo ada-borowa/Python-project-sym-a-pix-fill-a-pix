@@ -82,3 +82,6 @@ class SymAPixReader:
             i1, i2, j1, j2 = 0, 0, 0, 0
         i1, i2, j1, j2 = int(i1), int(i2), int(j1), int(j2)
         return self.img_rgb[i1: i2, j1: j2]
+
+    def get_lines(self):
+        return len(self.rho_horizontal), len(self.rho_vertical)

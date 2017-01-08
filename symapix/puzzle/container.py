@@ -6,18 +6,17 @@ import cv2
 import numpy as np
 import pickle
 import math
+from classificators import classificator
 
 __author__ = 'Adriana Borowa'
 __email__ = 'ada.borowa@gmail.com'
 
 
 def dist(x, y):
-    """Return distance between points, given that point are color (1-2 = 255)"""
+    """Turns bgr points to float, returns distance between points"""
     x = np.array(x, float)
     y = np.array(y, float)
-    # res = math.sqrt(((x[0]-y[0]) % 255)**2 + ((x[1] - y[1]) % 255)**2 + ((x[2] - y[2]) % 255)**2)
-    res = math.sqrt((x[0]-y[0])**2 + (x[1] - y[1])**2 + (x[2] - y[2])**2)
-    return res
+    return math.sqrt((x[0]-y[0])**2 + (x[1] - y[1])**2 + (x[2] - y[2])**2)
 
 
 class Container:
@@ -30,17 +29,17 @@ class Container:
         self.size = size
         self.puzzle = np.zeros((self.size[0] * 2 - 1, self.size[1] * 2 - 1))
         self.colors = []
-        self.clf_dir = '../../classificators/'
-        self.sq_clf = pickle.load(open(self.clf_dir + 'sqclf.p', 'rb'))
-        self.horiz_clf = pickle.load(open(self.clf_dir + 'horizclf.p', 'rb'))
-        self.vert_clf = pickle.load(open(self.clf_dir + 'vertclf.p', 'rb'))
-        self.x_clf = pickle.load(open(self.clf_dir + 'xclf.p', 'rb'))
-        pass
+        self.sq_clf = pickle.load(classificator.get('square'))
+        self.horiz_clf = pickle.load(classificator.get('horizontal'))
+        self.vert_clf = pickle.load(classificator.get('vertical'))
+        self.x_clf = pickle.load(classificator.get('x'))
+
+    def get_board(self):
+        return self.puzzle
 
     def insert(self, img_rgb, x, y, mode):
         """
         Inserts data into puzzle.
-        :param img_gray: fragment of full image to be processed in gray
         :param img_rgb: fragment of full image to be processed in rgb
         :param x: position
         :param y: position
@@ -109,3 +108,6 @@ class Container:
             return len(self.colors)
         else:
             return curr
+
+    def get_colors(self):
+        return self.colors
