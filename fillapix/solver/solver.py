@@ -33,12 +33,17 @@ class FillAPixSolver:
         self.size = self.puzzle.shape
         self.solution = np.zeros(self.size, int)
         self.probability = np.zeros(self.size, float)
+        self.user_solution = np.zeros(self.size, int)
 
     def set_puzzle(self, array):
         """Setting puzzle board; just for tests."""
         self.puzzle = array
         self.size = self.puzzle.shape
         self.solution = np.zeros(self.size, int)
+
+    def set_solution(self, array):
+        """Sets solution, only for generated puzzles"""
+        self.solution = array
 
     def solve(self):
         """Solver:
@@ -82,7 +87,6 @@ class FillAPixSolver:
             if count == 10:
                 break
             count += 1
-        print(count)
 
     def fill(self):
         """Fills fields with respect to actual knowledge."""
@@ -354,7 +358,6 @@ class FillAPixSolver:
         if count == 0:
             return True
         else:
-            print(count)
             return False
 
     def correct_fill(self):
@@ -390,3 +393,40 @@ class FillAPixSolver:
             txt += '\n'
         print(txt)
         return txt
+
+    def get_solution(self):
+        return self.solution
+
+    def get_user_solution(self):
+        return self.user_solution
+
+    def get_user_value(self, i, j):
+        return self.user_solution[i, j]
+
+    def set_user_value(self, x, y, val):
+        self.user_solution[x, y] = val
+
+    def set_solved(self):
+        self.user_solution = copy.deepcopy(self.solution)
+
+    def clear_user_solution(self):
+        self.user_solution = np.zeros(self.size, int)
+
+    def check_user_solution(self):
+        for i in range(self.size[0]):
+            for j in range(self.size[1]):
+                if self.solution[i, j] != self.user_solution[i, j] and self.user_solution[i, j] != 0:
+                    return i, j
+        return -1, -1
+
+    def is_solved_by_user(self):
+        """Checks if puzzle is solved by user."""
+        count = 0
+        for i in range(0, self.size[0]):
+            for j in range(0, self.size[1]):
+                if self.user_solution[i, j] != self.solution[i, j]:
+                    count += 1
+        if count == 0:
+            return True
+        else:
+            return False

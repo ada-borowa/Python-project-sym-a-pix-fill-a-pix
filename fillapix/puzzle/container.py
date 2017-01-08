@@ -5,6 +5,7 @@
 import cv2
 import numpy as np
 import pickle
+from classificators import classificator
 
 __author__ = 'Adriana Borowa'
 __email__ = 'ada.borowa@gmail.com'
@@ -18,8 +19,7 @@ class Container:
         """
         self.size = size
         self.puzzle = np.zeros((size[0], size[1]))
-        clf_file = '../../classificators/digit_clf.p'
-        self.classifier = pickle.load(open(clf_file, 'rb'))
+        self.classifier = pickle.load(classificator.get('digit'))
 
     def insert(self, image, x, y):
         """

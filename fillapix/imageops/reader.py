@@ -48,3 +48,6 @@ class FillAPixReader:
         img = self.img_gray[2 + self.rho_horizontal[x]: self.rho_horizontal[x + 1],
                              2 + self.rho_vertical[y]: self.rho_vertical[y + 1] - 1]
         return img
+
+    def get_lines(self):
+        return len(self.rho_horizontal), len(self.rho_vertical)
