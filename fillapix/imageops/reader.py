@@ -3,8 +3,8 @@
 """
 
 import cv2
-from common.imageops import get_line_positions
 
+from common.imageops import get_line_positions
 from fillapix.puzzle.container import Container
 
 __author__ = 'Adriana Borowa'
@@ -50,4 +50,8 @@ class FillAPixReader:
         return img
 
     def get_lines(self):
+        """
+        Used in visualization of puzzle.
+        :return: number of lines of both types.
+        """
         return len(self.rho_horizontal), len(self.rho_vertical)

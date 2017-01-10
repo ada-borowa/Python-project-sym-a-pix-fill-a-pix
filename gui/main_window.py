@@ -55,7 +55,6 @@ class MainWindow(QtGui.QMainWindow):
 
     def init_gui(self):
         """Initialization of UI."""
-
         # Window setup
         self.setWindowTitle('Puzzles')
         self.resize(SIZE, SIZE + 100)
@@ -134,7 +133,22 @@ class MainWindow(QtGui.QMainWindow):
         self.gsd.show()
 
     def generate_new_sym(self, width, height, color):
-        print(width, height, color)
+        """
+        Generates new puzzle, puzzle is then showed to user.
+        :param width: width of puzzle
+        :param height: height of puzzle
+        :param color: number of colors used
+        :return:
+        """
+        self.change_curr_game(1)
+        self.puzzle = sc.Container((height, width))
+        self.puzzle.set_colors(color)
+        solution = self.puzzle.generate_random()
+        self.horizontal_lines, self.vertical_lines = width + 1, height + 1
+        self.solver = SymAPixSolver(self.puzzle)
+        self.game_size = self.solver.size
+        self.solver.set_solution(solution)
+        self.draw_game()
 
     def load_fill_from_file(self):
         """Loads fill-a-pix puzzle from file."""
@@ -157,6 +171,12 @@ class MainWindow(QtGui.QMainWindow):
         self.gfd.show()
 
     def generate_new_fill(self, width, height):
+        """
+        Generates new puzzle, puzzle is then showed to user.
+        :param width: width of puzzle
+        :param height: height of puzzle
+        :return:
+        """
         self.change_curr_game(2)
         self.puzzle = fc.Container((height, width))
         solution = self.puzzle.generate_random()
@@ -177,9 +197,11 @@ class MainWindow(QtGui.QMainWindow):
             self.curr_game_label.setText('Currently playing: Fill-a-pix')
 
     def mousePressEvent(self, event):
+        """Overwrites QWidget function: catches mouse press events.
+        Depending on type of game performs action.
+        After that checks if game is solved."""
         if self.curr_game == 1:
             x, y = self.get_painter_pos(event.x(), event.y())
-            # print(x, y)
             if x % SQUARE < EPS:
                 self.change_line(int((x - x % SQUARE) / SQUARE * 2 - 1), int((y - y % SQUARE) / SQUARE * 2))
             elif SQUARE - EPS < x % SQUARE:
@@ -199,7 +221,7 @@ class MainWindow(QtGui.QMainWindow):
         self.check_solved()
 
     def get_painter_pos(self, i, j):
-        """Given position of mouse click, returns clicked square position."""
+        """Given position of mouse click and type of game, returns clicked line or  square position."""
         i = (i - 5) * ((self.vertical_lines + 1) * SQUARE) / 800
         j = (j - 55) * ((self.horizontal_lines + 1) * SQUARE) / 800
         if self.curr_game == 1:
@@ -215,7 +237,7 @@ class MainWindow(QtGui.QMainWindow):
                 return -1, -1
 
     def draw_game(self):
-        """Chooses what to draw."""
+        """Chooses what game to draw."""
         self.draw_lines()
         if self.curr_game == 1:
             self.draw_sym()
@@ -234,6 +256,7 @@ class MainWindow(QtGui.QMainWindow):
         self.draw_numbers()
 
     def draw_lines(self):
+        """Draws lines of game."""
         self.pix_map.fill(Qt.white)
         self.painter.begin(self.pix_map)
         self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
@@ -263,6 +286,7 @@ class MainWindow(QtGui.QMainWindow):
         self.board.setPixmap(self.pix_map)
 
     def draw_solution_lines(self):
+        """Draws user selected lines in sym-a-pix game."""
         curr_user_solution = self.solver.get_user_solution()
         self.painter.begin(self.pix_map)
         self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
@@ -281,6 +305,7 @@ class MainWindow(QtGui.QMainWindow):
         self.board.setPixmap(self.pix_map)
 
     def draw_numbers(self):
+        """Draws numbers in fill-a-pix game."""
         curr_user_solution = self.solver.get_user_solution()
         self.painter.begin(self.pix_map)
         self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
@@ -300,7 +325,7 @@ class MainWindow(QtGui.QMainWindow):
         self.board.setPixmap(self.pix_map)
 
     def draw_circles(self):
-        """Draws circles in sym-a-pix"""
+        """Draws circles in sym-a-pix."""
         colors = self.puzzle.get_colors()
         self.painter.begin(self.pix_map)
         self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
@@ -324,12 +349,15 @@ class MainWindow(QtGui.QMainWindow):
             self.solver.set_user_value(i, j, curr_val + 1)
 
     def change_line(self, i, j):
+        """Changes line selected by user. Line unselected <-> line selected."""
         self.solver.set_user_value(i, j, (self.solver.get_user_value(i, j) + 1) % 2)
 
     def draw_squares_sym(self):
+        """Fills squares in sym-a-pix game, if they are part of closed block."""
         pass
 
     def draw_squares_fill(self):
+        """Draws squares in fill-a-pix game: filled, unfilled, unsure."""
         self.painter.begin(self.pix_map)
         self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
         curr_user_solution = self.solver.get_user_solution()
@@ -364,6 +392,7 @@ class MainWindow(QtGui.QMainWindow):
             self.status_bar.showMessage('Correct!')
 
     def check_solved(self):
+        """Checks if user solved the game."""
         if self.solver.is_solved_by_user():
             self.painter.begin(self.pix_map)
             self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
@@ -377,6 +406,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
 def main_window():
+    """Runs game's main window."""
     app = QtGui.QApplication(sys.argv)
     ex = MainWindow()
     sys.exit(app.exec_())

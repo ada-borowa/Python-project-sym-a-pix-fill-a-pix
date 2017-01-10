@@ -4,6 +4,7 @@
 
 import numpy as np
 import math
+
 import cv2
 
 __author__ = 'Adriana Borowa'
@@ -12,14 +13,6 @@ __email__ = 'ada.borowa@gmail.com'
 DEGREE_VERTICAL = 0
 DEGREE_HORIZONTAL = 1.5708
 EPS = 0.0001
-
-
-class IncorrectFileException(Exception):
-    """ To be raised when puzzle is not a square.
-    """
-    def __init__(self, expression, message):
-        self.expression = expression
-        self.message = message
 
 
 def get_unique_lines(rhos):

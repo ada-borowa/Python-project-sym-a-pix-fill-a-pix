@@ -5,8 +5,8 @@
 import cv2
 import numpy as np
 import pickle
-from collections import Counter
-from classificators import classificator
+
+from classifiers import classifier
 
 __author__ = 'Adriana Borowa'
 __email__ = 'ada.borowa@gmail.com'
@@ -15,13 +15,13 @@ __email__ = 'ada.borowa@gmail.com'
 class Container:
     """Stores puzzle data."""
     def __init__(self, size, from_file=True):
-        """Initailization of container.
+        """Initialization of container.
            Size: width and height of puzzle
         """
         self.size = size
         self.puzzle = np.zeros((size[0], size[1]))
         if from_file:
-            self.classifier = pickle.load(classificator.get('digit'))
+            self.classifier = pickle.load(classifier.get('digit'))
 
     def insert(self, image, x, y):
         """
@@ -51,10 +51,17 @@ class Container:
             print(txt)
 
     def get_board(self):
+        """
+        Getter for puzzle board
+        :return: puzzle board
+        """
         return self.puzzle
 
     def generate_random(self):
-        """Generates random fill-a-pix puzzle"""
+        """
+        Generates random fill-a-pix puzzle.
+        :return: solution of generated puzzle
+        """
         self.puzzle += 100
         solution = np.zeros(self.size)
         for i, row in enumerate(self.puzzle):

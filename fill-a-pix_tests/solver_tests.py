@@ -1,7 +1,10 @@
 import unittest
+import numpy as np
 
 from fillapix.solver.solver import FillAPixSolver
-import numpy as np
+
+__author__ = 'Adriana Borowa'
+__email__ = 'ada.borowa@gmail.com'
 
 
 class TestSolverSizeOfHood(unittest.TestCase):
@@ -33,6 +36,7 @@ class TestSolverSizeOfHood(unittest.TestCase):
 
 
 class Test2ClueLogic(unittest.TestCase):
+    """Tests for 2 clue logic (finding filling of squares using clues based on 2 points."""
     def setUp(self):
         self.solver = FillAPixSolver(None)
 
@@ -75,6 +79,7 @@ class Test2ClueLogic(unittest.TestCase):
             self.assertEqual(self.solver.print_solution(), a)
 
     def test_some_filled(self):
+        """Test for finding 2 clue logic, with additional filled fields in solution"""
         examples = []
         answers = []
         solutions = []
@@ -141,6 +146,7 @@ class Test2ClueLogic(unittest.TestCase):
             self.assertEqual(self.solver.print_solution(), a)
 
     def test_special_case_corner(self):
+        """Test for case with two 2s in corner."""
         example = np.array([[2, 2, 100, 100, 100, 2, 2],
                             [2, 100, 100, 100, 100, 100, 2],
                             [100, 100, 100, 100, 100, 100, 100],
@@ -155,6 +161,7 @@ class Test2ClueLogic(unittest.TestCase):
         self.assertEqual(self.solver.print_solution(), answer)
 
     def test_special_case_border(self):
+        """Test for case with two 3s on border"""
         example = np.array([[100, 100, 3, 100, 100],
                             [100, 100, 3, 100, 100],
                             [100, 100, 100, 100, 100],
@@ -175,6 +182,7 @@ class Test2ClueLogic(unittest.TestCase):
 
 
 class Test3ClueLogic(unittest.TestCase):
+    """Tests for logic based on 3 points."""
     def setUp(self):
         self.solver = FillAPixSolver(None)
 
@@ -192,6 +200,7 @@ class Test3ClueLogic(unittest.TestCase):
                 a += 1
 
     def test_3_clue_logic(self):
+        """Tests for basic 3 clue logic."""
         example = np.array([[100, 100, 100, 100, 100],
                             [1, 100, 100, 100, 100],
                             [100, 100, 100, 100, 100],
@@ -229,6 +238,7 @@ class Test3ClueLogic(unittest.TestCase):
         self.assertEqual(self.solver.print_solution(), answer)
 
     def test_ASA(self):
+        """Tests for special clue: type ASA"""
         example = np.array([[100, 100, 100, 100, 100, 100],
                            [100, 4, 6, 100, 2, 100],
                            [100, 100, 100, 100, 100, 100]])
@@ -240,5 +250,4 @@ class Test3ClueLogic(unittest.TestCase):
         self.assertEqual(self.solver.print_solution(), answer)
 
 if __name__ == '__main__':
-    SUITE1 = unittest.TestLoader().loadTestsFromTestCase(TestSolverSizeOfHood)
-    print(unittest.TextTestRunner(verbosity=3).run(SUITE1))
+    print('Tests for fill-a-pix solver.')

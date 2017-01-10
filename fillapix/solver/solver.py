@@ -12,7 +12,10 @@ __email__ = 'ada.borowa@gmail.com'
 
 
 def get_unique(a):
-    """Returns unique items in nparray"""
+    """Returns unique items in nparray
+    :param a:  array
+    :return: unique elements of array
+    """
     if len(a) > 0:
         b = np.ascontiguousarray(a).view(np.dtype((np.void, a.dtype.itemsize * a.shape[1])))
         _, idx = np.unique(b, return_index=True)
@@ -25,7 +28,9 @@ class FillAPixSolver:
     """ Solver class. """
 
     def __init__(self, puzzle):
-        """Solver initialization."""
+        """Solver initialization.
+        :param: puzzle: puzzle container
+        """
         if puzzle is None:
             self.puzzle = np.zeros((10, 10), int)
         else:
@@ -42,7 +47,11 @@ class FillAPixSolver:
         self.solution = np.zeros(self.size, int)
 
     def set_solution(self, array):
-        """Sets solution, only for generated puzzles"""
+        """
+        Sets solution, only for generated puzzles
+        :param array: array with solution to generated puzzle
+        :return: None
+        """
         self.solution = array
 
     def solve(self):
@@ -141,8 +150,8 @@ class FillAPixSolver:
                 el1_hood = [(a, b) for a in range(max(0, x - 1), min(x + 2, self.size[0]))
                             for b in range(max(0, y - 1), min(y + 2, self.size[1]))]
                 if (i not in range(max(0, x - 1), min(x + 2, self.size[0])) or
-                            j not in range(max(0, y - 1), min(y + 2, self.size[1]))) and \
-                                self.puzzle[i, j] < 10:
+                   j not in range(max(0, y - 1), min(y + 2, self.size[1]))) and \
+                   self.puzzle[i, j] < 10:
                     el2 = self.puzzle[i, j]
                     el2_hood = [(a, b) for a in range(max(0, i - 1), min(i + 2, self.size[0]))
                                 for b in range(max(0, j - 1), min(j + 2, self.size[1]))]
@@ -236,7 +245,13 @@ class FillAPixSolver:
         self.assign_to_array(to_insert, -1)
 
     def get_neighbours(self, x, y, close):
-        """Checks if points has 2 neighbours - for 3 clue logic"""
+        """
+        Checks if points has 2 neighbours - for 3 clue logic
+        :param x: position
+        :param y: position
+        :param close: boolean, True if function is expected to check closes neighbours, False if 2 points away
+        :return: neighbours
+        """
         neighbours = []
         if close:
             for i in range(max(0, x - 1), min(x + 2, self.size[0])):
@@ -290,7 +305,12 @@ class FillAPixSolver:
                 self.solution[x - 1: x + 2, y - 2] = -1
 
     def filled_sure(self, x, y):
-        """Returns number of sure filled squares in neighborhood."""
+        """
+        Counts how many neighbours of point are for sure filled.
+        :param x: position
+        :param y: position
+        :return: number of filled neighbours
+        """
         count = 0
         for i in range(max(0, x - 1), min(x + 2, self.size[0])):
             for j in range(max(0, y - 1), min(y + 2, self.size[1])):
@@ -299,7 +319,12 @@ class FillAPixSolver:
         return count
 
     def empty_sure(self, x, y):
-        """Returns number of sure empty squares in neighborhood."""
+        """
+        Counts how many neighbours of point are for sure unfilled.
+        :param x: position
+        :param y: position
+        :return: number of unfilled neighbours
+        """
         count = 0
         for i in range(max(0, x - 1), min(x + 2, self.size[0])):
             for j in range(max(0, y - 1), min(y + 2, self.size[1])):
@@ -308,7 +333,12 @@ class FillAPixSolver:
         return count
 
     def unsure_in_array(self, array):
-        """Returns number of not sure squares in neighborhood."""
+        """
+        Counts how many neighbours of point are for neither for sure filled nor unfilled
+        :param x: position
+        :param y: position
+        :return: number of unsure neighbours
+        """
         count = 0
         for el in array:
             if self.solution[el] == 0:
@@ -316,7 +346,12 @@ class FillAPixSolver:
         return count
 
     def size_of_hood(self, i, j):
-        """Gets size of the point's neighbourhood."""
+        """
+        Size of point's neighbourhood.
+        :param i: position
+        :param j: position
+        :return: number of neighbours
+        """
         if 0 < i < self.size[0] - 1 and 0 < j < self.size[1] - 1:
             return 9
         elif (i == 0 or i == self.size[0] - 1) and (j == 0 or j == self.size[1] - 1):
@@ -325,7 +360,13 @@ class FillAPixSolver:
             return 6
 
     def assign_to_hood(self, x, y, val):
-        """Assign val to entire neighbourhood of point (including point i, j)."""
+        """
+        Assign val to entire neighbourhood of point (including point i, j).
+        :param x: position
+        :param y: position
+        :param val: value to be assigned
+        :return: how many points were assigned
+        """
         count = 0
         for i in range(max(0, x - 1), min(x + 2, self.size[0])):
             for j in range(max(0, y - 1), min(y + 2, self.size[1])):
@@ -335,12 +376,18 @@ class FillAPixSolver:
         return count
 
     def reset_hood(self, x, y):
+        """Resets values in neighbourhood to 0."""
         for i in range(max(0, x - 1), min(x + 2, self.size[0])):
             for j in range(max(0, y - 1), min(y + 2, self.size[1])):
                 self.solution[i, j] = 0
 
     def assign_to_array(self, array, val):
-        """Assign val to array of points."""
+        """
+        Assign val to array of points.
+        :param array: array to be filled
+        :param val: value to be assigned
+        :return: how many points were assigned
+        """
         count = 0
         for x, y in array:
             if self.solution[x, y] == 0:
@@ -372,14 +419,6 @@ class FillAPixSolver:
 
     def print_solution(self):
         """Prints solution, for visual testing."""
-        # for row in self.solution:
-        #     txt = ''
-        #     for el in row:
-        #         if el in [0, 1]:
-        #             txt += '  {}'.format(el)
-        #         else:
-        #             txt += ' {}'.format(el)
-        #     print(txt)
         print()
         txt = ''
         for row in self.solution:
@@ -395,24 +434,31 @@ class FillAPixSolver:
         return txt
 
     def get_solution(self):
+        """Getter for solution."""
         return self.solution
 
     def get_user_solution(self):
+        """Getter for user's solution."""
         return self.user_solution
 
     def get_user_value(self, i, j):
+        """Getter for user chosen value in point."""
         return self.user_solution[i, j]
 
     def set_user_value(self, x, y, val):
+        """Sets user chosen value."""
         self.user_solution[x, y] = val
 
     def set_solved(self):
+        """Sets user's solution to solution."""
         self.user_solution = copy.deepcopy(self.solution)
 
     def clear_user_solution(self):
+        """Resets user's solution."""
         self.user_solution = np.zeros(self.size, int)
 
     def check_user_solution(self):
+        """Checks if user's solution is currently correct. Omits unfilled points."""
         for i in range(self.size[0]):
             for j in range(self.size[1]):
                 if self.solution[i, j] != self.user_solution[i, j] and self.user_solution[i, j] != 0:

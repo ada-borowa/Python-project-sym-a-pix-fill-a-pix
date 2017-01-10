@@ -1,12 +1,14 @@
 import unittest
+import numpy as np
 
 from symapix.solver.solver import SymAPixSolver, symmetric_point
-import numpy as np
+
+__author__ = 'Adriana Borowa'
+__email__ = 'ada.borowa@gmail.com'
 
 
 class TestContainsDot(unittest.TestCase):
-    """Tests for checking if there is dot or parto of dot in square."""
-
+    """Tests for checking if there is dot or part of dot in square."""
     def setUp(self):
         self.solver = SymAPixSolver(None)
         self.arr = np.array([[0, 0, 1, 0, 0, 0, 0],

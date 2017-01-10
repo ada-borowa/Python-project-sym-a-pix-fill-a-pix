@@ -3,6 +3,7 @@
 """
 
 import cv2
+
 from common.imageops import get_line_positions
 from symapix.puzzle.container import Container
 
@@ -12,7 +13,6 @@ __email__ = 'ada.borowa@gmail.com'
 
 class SymAPixReader:
     """Reader for sym-a-pix puzzle."""
-
     def __init__(self, filename):
         """ Reads puzzle from picture.
         :param filename: name of file with image of puzzle.
@@ -84,4 +84,5 @@ class SymAPixReader:
         return self.img_rgb[i1: i2, j1: j2]
 
     def get_lines(self):
+        """Used in visualization: return number of lines of both types."""
         return len(self.rho_horizontal), len(self.rho_vertical)

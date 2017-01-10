@@ -6,10 +6,18 @@ import cv2
 import numpy as np
 import pickle
 import math
-from classificators import classificator
+from classifiers import classifier
 
 __author__ = 'Adriana Borowa'
 __email__ = 'ada.borowa@gmail.com'
+
+
+# Colors possible to use when creating random game.
+COLORS = [[0, 0, 0],
+          [255, 255, 255],
+          [255, 0, 0],
+          [0, 255, 0],
+          [0, 0, 255]]
 
 
 def dist(x, y):
@@ -21,21 +29,26 @@ def dist(x, y):
 
 class Container:
     """Stores puzzle data."""
-
     def __init__(self, size):
         """Initailization of container.
-           Size: width and height of puzzle
+           :param: size: width and height of puzzle
+           :returns: None
         """
         self.size = size
         self.puzzle = np.zeros((self.size[0] * 2 - 1, self.size[1] * 2 - 1))
         self.colors = []
-        self.sq_clf = pickle.load(classificator.get('square'))
-        self.horiz_clf = pickle.load(classificator.get('horizontal'))
-        self.vert_clf = pickle.load(classificator.get('vertical'))
-        self.x_clf = pickle.load(classificator.get('x'))
+        self.sq_clf = pickle.load(classifier.get('square'))
+        self.horiz_clf = pickle.load(classifier.get('horizontal'))
+        self.vert_clf = pickle.load(classifier.get('vertical'))
+        self.x_clf = pickle.load(classifier.get('x'))
 
     def get_board(self):
+        """Returns puzzle board."""
         return self.puzzle
+
+    def set_colors(self, color):
+        """Sets possible colors depending on number chosen by user."""
+        self.colors = COLORS[: color]
 
     def insert(self, img_rgb, x, y, mode):
         """
@@ -93,6 +106,7 @@ class Container:
             print(txt)
 
     def get_color(self, img):
+        """Reads color of dot on image and adds to list of colors (if color is not on it, yet)"""
         w, h, _ = img.shape
         color = img[int(w/2.0), int(h/2.0)]
         curr = 0
@@ -110,4 +124,12 @@ class Container:
             return curr
 
     def get_colors(self):
+        """Returns list of colors."""
         return self.colors
+
+    def generate_random(self):
+        """Generates random sym-a-pix puzzle.
+        :returns: solution of generated game"""
+        solution = np.zeros(self.puzzle.shape)
+
+        return solution

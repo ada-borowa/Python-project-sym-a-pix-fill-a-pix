@@ -54,7 +54,6 @@ def squares_next_to(x, y):
 
 class SymAPixSolver:
     """ Solver class. """
-
     def __init__(self, puzzle):
         if puzzle is None:
             self.puzzle = np.zeros((10, 10), int)
@@ -75,6 +74,7 @@ class SymAPixSolver:
     def set_solution(self, array):
         """Sets solution, only for generated puzzles"""
         self.solution = array
+        self.set_dots()
 
     def set_dots(self):
         """Sets values in solution were dots are"""
@@ -168,6 +168,7 @@ class SymAPixSolver:
                     self.solution[new_a, new_b] = 1
 
     def mark_closed(self):
+        """Marks points as closed."""
         for i in range(self.size[0]):
             for j in range(self.size[1]):
                 if self.solution[i, j] == -2:
@@ -211,6 +212,7 @@ class SymAPixSolver:
         return hood, True
 
     def is_wall(self, x, y):
+        """Checks if point is wall."""
         if x in [-1, self.size[0]]:
             return True
         elif y in [-1, self.size[1]]:
@@ -263,10 +265,11 @@ class SymAPixSolver:
         return True
 
     def correct_fill(self):
+        """Checks if game is currently correctly filled."""
         pass
 
     def print_solution(self):
-        """Prints solution, for visual testing."""
+        """Prints solution, for testing."""
         for i, row in enumerate(self.solution):
             txt = ''
             for j, el in enumerate(row):
@@ -303,28 +306,34 @@ class SymAPixSolver:
                         txt += '__'
                     elif i % 2 > 0 and j % 2 > 0:
                         txt += '+ '
-
             print(txt)
 
     def get_solution(self):
+        """Returns real solution."""
         return self.solution
 
     def get_user_solution(self):
+        """Returns user's solution."""
         return self.user_solution
 
     def get_user_value(self, i, j):
+        """Reads value chosen by user."""
         return self.user_solution[i, j]
 
     def set_user_value(self, x, y, val):
+        """Sets value chosen by user."""
         self.user_solution[x, y] = val
 
     def set_solved(self):
+        """Sets user solution to real solution."""
         self.user_solution = copy.deepcopy(self.solution)
 
     def clear_user_solution(self):
+        """Resets user solution."""
         self.user_solution = np.zeros(self.size, int)
 
     def check_user_solution(self):
+        """Checks user solution. Omits unsure squares."""
         for i in range(self.size[0]):
             for j in range(self.size[1]):
                 if self.solution[i, j] != self.user_solution[i, j] and self.user_solution[i, j] != 0:
