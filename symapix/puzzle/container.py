@@ -35,7 +35,7 @@ class Container:
            :returns: None
         """
         self.size = size
-        self.puzzle = np.zeros((self.size[0] * 2 - 1, self.size[1] * 2 - 1))
+        self.puzzle = np.zeros((self.size[0] * 2 - 1, self.size[1] * 2 - 1)) - 1
         self.colors = []
         self.sq_clf = pickle.load(classifier.get('square'))
         self.horiz_clf = pickle.load(classifier.get('horizontal'))
@@ -60,7 +60,6 @@ class Container:
         :return: None
         """
         img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
-
         image = cv2.resize(img_gray, (20, 20))
         number = 0
         i, j = 0, 0

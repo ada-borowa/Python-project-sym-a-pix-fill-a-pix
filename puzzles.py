@@ -10,4 +10,3 @@ __email__ = 'ada.borowa@gmail.com'
 
 if __name__ == '__main__':
     main_window()
-

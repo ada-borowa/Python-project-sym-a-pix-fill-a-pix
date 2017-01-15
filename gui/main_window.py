@@ -122,6 +122,7 @@ class MainWindow(QtGui.QMainWindow):
             self.horizontal_lines, self.vertical_lines = reader.get_lines()
             self.solver = SymAPixSolver(self.puzzle)
             self.game_size = self.solver.size
+
             self.solver.solve()
             self.draw_game()
             self.status_bar.showMessage('Loaded puzzle from file: {}'.format(file_name.split('/')[-1]))
@@ -241,13 +242,14 @@ class MainWindow(QtGui.QMainWindow):
         self.draw_lines()
         if self.curr_game == 1:
             self.draw_sym()
+            self.draw_border()
         elif self.curr_game == 2:
             self.draw_fill()
 
     def draw_sym(self):
         """Draws sym-a-pix game."""
+        self.draw_squares_sym()
         self.draw_solution_lines()
-        # self.draw_squares_sym()
         self.draw_circles()
 
     def draw_fill(self):
@@ -261,27 +263,38 @@ class MainWindow(QtGui.QMainWindow):
         self.painter.begin(self.pix_map)
         self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
         for line in range(1, self.horizontal_lines + 1):
-            if line in [1, self.horizontal_lines] and self.curr_game == 1:
-                pen = QtGui.QPen()
-                pen.setColor(Qt.black)
-                pen.setWidth(3)
-                self.painter.setPen(pen)
-            elif self.curr_game == 2:
+            if self.curr_game == 2:
                 self.painter.setPen(Qt.black)
             else:
                 self.painter.setPen(Qt.lightGray)
             self.painter.drawLine(SQUARE, line * SQUARE, self.vertical_lines * SQUARE, line * SQUARE)
         for line in range(1, self.vertical_lines + 1):
-            if line in [1, self.vertical_lines] and self.curr_game == 1:
-                pen = QtGui.QPen()
-                pen.setColor(Qt.black)
-                pen.setWidth(3)
-                self.painter.setPen(pen)
-            elif self.curr_game == 2:
+            if self.curr_game == 2:
                 self.painter.setPen(Qt.black)
             else:
                 self.painter.setPen(Qt.lightGray)
             self.painter.drawLine(line * SQUARE, SQUARE, line * SQUARE, self.horizontal_lines * SQUARE)
+        self.painter.end()
+        self.board.setPixmap(self.pix_map)
+
+    def draw_border(self):
+        """Draws border of the sym-a-pix game."""
+        self.painter.begin(self.pix_map)
+        self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
+        for line in range(1, self.horizontal_lines + 1):
+            if line in [1, self.horizontal_lines]:
+                pen = QtGui.QPen()
+                pen.setColor(Qt.black)
+                pen.setWidth(3)
+                self.painter.setPen(pen)
+                self.painter.drawLine(SQUARE, line * SQUARE, self.vertical_lines * SQUARE, line * SQUARE)
+        for line in range(1, self.vertical_lines + 1):
+            if line in [1, self.vertical_lines]:
+                pen = QtGui.QPen()
+                pen.setColor(Qt.black)
+                pen.setWidth(3)
+                self.painter.setPen(pen)
+                self.painter.drawLine(line * SQUARE, SQUARE, line * SQUARE, self.horizontal_lines * SQUARE)
         self.painter.end()
         self.board.setPixmap(self.pix_map)
 
@@ -296,11 +309,17 @@ class MainWindow(QtGui.QMainWindow):
         self.painter.setPen(pen)
         for i, row in enumerate(curr_user_solution):
             for j, el in enumerate(row):
-                if curr_user_solution[i, j] == 1:
-                    if i % 2 == 0:
-                        self.painter.drawLine(SQUARE * (i/2 + 1), SQUARE * (j/2+1.5), SQUARE * (i/2 + 2), SQUARE * (j/2+1.5))
-                    elif j % 2 == 0:
-                        self.painter.drawLine(SQUARE * (i/2+1.5), SQUARE * (j/2 + 1), SQUARE * (i/2+1.5), SQUARE * (j/2 + 2))
+                if not (i % 2 == 0 and j % 2 == 0) and not (i % 2 == 1 and j % 2 == 1):
+                    try:
+                        if curr_user_solution[j, i] == 1:
+                            if i % 2 == 0:
+                                self.painter.drawLine(SQUARE * (i/2 + 1), SQUARE * (j/2+1.5),
+                                                      SQUARE * (i/2 + 2), SQUARE * (j/2+1.5))
+                            elif j % 2 == 0:
+                                self.painter.drawLine(SQUARE * (i/2+1.5), SQUARE * (j/2 + 1),
+                                                      SQUARE * (i/2+1.5), SQUARE * (j/2 + 2))
+                    except IndexError:
+                        pass
         self.painter.end()
         self.board.setPixmap(self.pix_map)
 
@@ -333,6 +352,10 @@ class MainWindow(QtGui.QMainWindow):
             for j, el in enumerate(row):
                 if el > 0:
                     color = colors[int(el) - 1]
+                    if color[0] == 0 and color[1] == 0 and color[2] == 0:
+                        self.painter.setPen(Qt.lightGray)
+                    else:
+                        self.painter.setPen(Qt.black)
                     self.painter.setBrush(QtGui.QColor(color[2], color[1], color[0]))
                     self.painter.drawEllipse(QtCore.QPoint(SQUARE * 1.5 + SQUARE * j / 2.0,
                                                            SQUARE * 1.5 + SQUARE * i / 2.0), 5, 5)
@@ -350,11 +373,27 @@ class MainWindow(QtGui.QMainWindow):
 
     def change_line(self, i, j):
         """Changes line selected by user. Line unselected <-> line selected."""
-        self.solver.set_user_value(i, j, (self.solver.get_user_value(i, j) + 1) % 2)
+        i, j = j, i
+        val = self.solver.get_user_value(i, j)
+        if val is not None:
+            self.solver.set_user_value(i, j, (val + 1) % 2)
 
     def draw_squares_sym(self):
         """Fills squares in sym-a-pix game, if they are part of closed block."""
-        pass
+        self.painter.begin(self.pix_map)
+        self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
+        color_board = self.solver.get_color_board()
+        colors = self.solver.get_colors()
+        for i, row in enumerate(color_board):
+            for j, el in enumerate(row):
+                if i % 2 == 0 and j % 2 == 0 and el > 0:
+                    c = colors[el - 1]
+                    self.painter.setBrush(QtGui.QColor(c[2], c[1], c[0]))
+                    self.painter.setPen(QtGui.QColor(c[2], c[1], c[0]))
+                    self.painter.drawRect(SQUARE * (j/2 + 1), SQUARE * (i/2 + 1),
+                                          SQUARE, SQUARE)
+        self.painter.end()
+        self.board.setPixmap(self.pix_map)
 
     def draw_squares_fill(self):
         """Draws squares in fill-a-pix game: filled, unfilled, unsure."""
@@ -393,16 +432,17 @@ class MainWindow(QtGui.QMainWindow):
 
     def check_solved(self):
         """Checks if user solved the game."""
-        if self.solver.is_solved_by_user():
-            self.painter.begin(self.pix_map)
-            self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
-            font = QtGui.QFont('Arial')
-            font.setPointSize(22)
-            self.painter.setFont(font)
-            self.painter.setPen(Qt.red)
-            self.painter.drawText(SQUARE, SQUARE, 'SOLVED!')
-            self.painter.end()
-            self.board.setPixmap(self.pix_map)
+        if self.solver is not None:
+            if self.solver.is_solved_by_user():
+                self.painter.begin(self.pix_map)
+                self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
+                font = QtGui.QFont('Arial')
+                font.setPointSize(22)
+                self.painter.setFont(font)
+                self.painter.setPen(Qt.red)
+                self.painter.drawText(SQUARE, SQUARE, 'SOLVED!')
+                self.painter.end()
+                self.board.setPixmap(self.pix_map)
 
 
 def main_window():

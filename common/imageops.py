@@ -25,13 +25,13 @@ def get_unique_lines(rhos):
     tmp = []
     it = 0
     while it < len(rhos) - 1:
-        if rhos[it + 1] - rhos[it] < 3:
+        if rhos[it + 1] - rhos[it] < 7:
             tmp.append(int((rhos[it] + rhos[it+1])/2.0))
             it += 1
         else:
             tmp.append(int(rhos[it]))
         it += 1
-    if rhos[-1] - tmp[-1] > 3:
+    if rhos[-1] - tmp[-1] > 7:
         tmp.append(int(rhos[-1]))
     return tmp
 
@@ -43,7 +43,6 @@ def get_line_positions(img):
     :return: positions of horizontal and vertical lines
     """
     edges = cv2.Canny(img, 50, 150, apertureSize=3)
-
     lines = cv2.HoughLines(edges, 1, np.pi / 180, 200)
     if lines is None:
         lines = cv2.HoughLines(edges, 1, np.pi / 180, 100)
