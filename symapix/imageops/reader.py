@@ -25,6 +25,7 @@ class SymAPixReader:
         self.img_edges = None
         self.rho_vertical = []
         self.rho_horizontal = []
+        # self.count = 900
 
     def create_puzzle(self):
         """
@@ -81,6 +82,8 @@ class SymAPixReader:
         else:
             i1, i2, j1, j2 = 0, 0, 0, 0
         i1, i2, j1, j2 = int(i1), int(i2), int(j1), int(j2)
+        # cv2.imwrite('square_' + str(self.count).zfill(6) + ".jpg", self.img_rgb[i1: i2, j1: j2])
+        # self.count += 1
         return self.img_rgb[i1: i2, j1: j2]
 
     def get_lines(self):
