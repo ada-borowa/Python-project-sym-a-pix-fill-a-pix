@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 """ Sym-a-pix: Solving puzzle
 """
-import random
-
 import numpy as np
 import math
-from itertools import permutations
-from time import time
 import copy
 
 from common.misc import get_unique
@@ -73,7 +69,22 @@ def count(array, el):
 
 
 def point_dist(x, y, i, j):
-    return math.sqrt((x - i)**2 + (y - j)**2)
+    return math.sqrt((x - i) ** 2 + (y - j) ** 2)
+
+
+def adjacent_squares(x, y):
+    """Returns list of squares adjacent to given."""
+    return [[x - 2, y], [x + 2, y], [x, y - 2], [x, y + 2]]
+
+
+def closest_closed(i, j, array):
+    """Checks if closest block to dot are filled."""
+    block = define_block(i, j)
+    closed = True
+    for b in block:
+        if array[b[0], b[1]] < 1:
+            closed = False
+    return closed
 
 
 class SymAPixSolver:
@@ -119,26 +130,34 @@ class SymAPixSolver:
         self.fill_smallest()
         self.check_closed()
         for i in range(1, 20):
-            self.fill(i)
+            count = self.find_blocked_regions()
+            print(i, count)
+            self.check_closed()
             self.fill_smallest()
             self.check_closed()
-            self.print_solution()
+            if i % 8 == 0:
+                count = self.fill(i)
+                self.check_closed()
+                print(count)
 
     def init_fill(self):
         """Fills obvious lines between two dots: if two squares contain dot or part of dot there is line."""
         for x in range(0, self.size[0], 2):
             for y in range(0, self.size[1], 2):
                 if self.contains_dot(x, y):
-                    adjacent = self.adjacent_squares(x, y)
+                    adjacent = adjacent_squares(x, y)
                     for pair in adjacent:
-                        i, j = pair
-                        if self.contains_dot(i, j) and not self.is_same_dot(x, y, i, j):
-                            a, b = wall_between(x, y, i, j)
-                            self.solution[a, b] = 1
+                        if self.is_inside(*pair):
+                            i, j = pair
+                            if self.contains_dot(i, j) and not self.is_same_dot(x, y, i, j):
+                                a, b = wall_between(x, y, i, j)
+                                self.solution[a, b] = 1
 
     def contains_dot(self, x, y):
         """Checks if square contains dot or part of a dot
         or checks if line contains dot or part of a dot."""
+        if not self.is_inside(x, y):
+            return False
         if x % 2 == 0 and y % 2 == 0:
             for i in range(max(x - 1, 0), min(x + 2, self.size[0])):
                 for j in range(max(y - 1, 0), min(y + 2, self.size[1])):
@@ -154,18 +173,18 @@ class SymAPixSolver:
                     return True
         return False
 
-    def adjacent_squares(self, x, y):
-        """Returns list of squares adjacent to given."""
-        adj = []
-        if x > 1:
-            adj.append([x - 2, y])
-        if x < self.size[0] - 1:
-            adj.append([x + 2, y])
-        if y > 1:
-            adj.append([x, y - 2])
-        if y < self.size[1] - 1:
-            adj.append([x, y + 2])
-        return adj
+    def dot_in_corner(self, x, y, i, j):
+        """Checks if any corner of square has dot"""
+        if x % 2 > 0 or y % 2 > 0:
+            return [-1, -1]
+        if x == i:
+            corners = [[x - 1, int((y + j)/2)], [x + 1, int((y + j)/2)]]
+        elif y == j:
+            corners = [[int((x + i)/2), y - 1], [int((x + 1)/2), y + 1]]
+        for c in corners:
+            if self.is_inside(*c) and self.solution[c[0], c[1]] == -2:
+                return c
+        return [-1, -1]
 
     def is_same_dot(self, x, y, i, j):
         """Checks if two squares have the same dot."""
@@ -187,6 +206,7 @@ class SymAPixSolver:
 
     def fill_smallest(self):
         """Fils the smallest blocks (1, 2 or 4 squares depending on where dot is)."""
+        count = 0
         for x in range(0, self.size[0]):
             for y in range(0, self.size[1]):
                 if self.solution[x, y] == -2:
@@ -196,41 +216,77 @@ class SymAPixSolver:
                             a, b = symmetric_point(x, y, wall[0], wall[1])
                             if 0 <= a < self.size[0] and 0 <= b < self.size[1]:
                                 self.solution[a, b] = 1
+                                count += 1
+        return count
 
     def fill(self, k):
         """Fills to length of k"""
+        count = 0
         for i, row in enumerate(self.solution):
             for j, el in enumerate(row):
-                if self.solution[i, j] == -2 and not self.closest_closed(i, j, self.solution):
-                    queue = define_block(i, j)
-                    visited = []
-                    while queue:
-                        p = queue.pop()
-                        visited.append(p)
-                        next_ones = self.adjacent_squares(p[0], p[1])
-                        for n in next_ones:
-                            if point_dist(i, j, n[0], n[1]) > k:
-                                return
-                            if not (self.solution[n[0], n[1]] == -2 or n in visited):
-                                n_sym = symmetric_point(i, j, n[0], n[1])
-                                p_sym = symmetric_point(i, j, p[0], p[1])
-                                if (0 <= n_sym[0] < self.size[0] and 0 <= n_sym[1] < self.size[1] and
-                                      0 <= p_sym[0] < self.size[0] and 0 <= p_sym[1] < self.size[1]) and \
-                                      not (self.solution[n_sym[0], n_sym[1]] == -2 or
-                                      self.is_wall(*wall_between(p_sym[0], p_sym[1], n_sym[0], n_sym[1]))):
+                if self.solution[i, j] == -2 and not closest_closed(i, j, self.solution):
+                    count += self.fill_from_dot(i, j, k)
+        return count
 
-                                    new_wall = wall_between(p_sym[0], p_sym[1], n_sym[0], n_sym[1])
-                                    if self.is_wall(*wall_between(p[0], p[1], n[0], n[1])) and \
-                                            not (self.is_wall(*wall_between(p_sym[0], p_sym[1], n_sym[0], n_sym[1]))
-                                                 or self.contains_dot(new_wall[0], new_wall[1])):
-                                        self.solution[new_wall[0], new_wall[1]] = 1
-                                    else:
-                                        queue.append(n)
+    def fill_from_dot(self, i, j, k=0, block=[]):
+        """
+        Fills block from given dot.
+        :param block: if not empty, function can use only points in block
+        :param k: describes how far from dot algorithm will attempt to fill puzzle
+        :param i: position
+        :param j: position
+        :return: how many walls were put in
+        """
+        count = 0
+        queue = define_block(i, j)
+        visited = []
+        no_queue = False
+        while queue:
+            p = queue.pop()
+            visited.append(p)
+            next_ones = []
+            for n in adjacent_squares(p[0], p[1]):
+                if 0 < k < point_dist(n[0], n[1], i, j):
+                    no_queue = True
+                wall = wall_between(n[0], n[1], p[0], p[1])
+                if n not in visited:
+                    if len(block) > 0:
+                        if n in block:
+                            if not (self.is_inside(*wall) and self.solution[wall[0], wall[1]] == -2) \
+                                    and not (self.is_inside(*n) and self.solution[n[0], n[1]] == -2):
+                                next_ones.append(n)
+                    else:
+                        if not (self.is_inside(*wall) and self.solution[wall[0], wall[1]] == -2) \
+                                and not (self.is_inside(*n) and self.solution[n[0], n[1]] == -2):
+                            next_ones.append(n)
+            for n in next_ones:
+                n_sym = symmetric_point(i, j, n[0], n[1])
+                p_sym = symmetric_point(i, j, p[0], p[1])
+                new_wall = wall_between(p_sym[0], p_sym[1], n_sym[0], n_sym[1])
+                curr_wall = wall_between(p[0], p[1], n[0], n[1])
+                if self.is_wall(*curr_wall) and \
+                        self.is_inside(*new_wall) and not (self.is_wall(*new_wall)
+                                                           or self.solution[new_wall[0], new_wall[1]] == -2):
+                    self.solution[new_wall[0], new_wall[1]] = 1
+                    count += 1
+                if self.is_wall(*new_wall) and \
+                        self.is_inside(*curr_wall) and not (self.is_wall(*curr_wall)
+                                                            or self.solution[curr_wall[0], curr_wall[1]] == -2):
+                    self.solution[curr_wall[0], curr_wall[1]] = 1
+                    count += 1
+            if not no_queue:
+                for n in next_ones:
+                    curr_wall = wall_between(p[0], p[1], n[0], n[1])
+                    if not self.is_wall(*curr_wall) and \
+                            self.is_inside(*n) and self.solution[n[0], n[1]] < 1:
+                        queue.append(n)
 
-                    block = get_unique(np.array(visited))
-                    if self.block_is_closed(block, self.solution):
-                        for b in block:
-                            self.solution[b[0], b[1]] = self.puzzle[i, j]
+        block = get_unique(np.array(visited))
+        if self.block_is_closed(block, self.solution):
+            for b in block:
+                self.solution[b[0], b[1]] = self.puzzle[i, j]
+
+        return count
 
     def check_closed(self, user=False):
         """
@@ -245,29 +301,80 @@ class SymAPixSolver:
 
         for i, row in enumerate(array):
             for j, el in enumerate(row):
-                if array[i, j] == -2 and not self.closest_closed(i, j, array):
+                if array[i, j] == -2 and not closest_closed(i, j, array):
                     queue = define_block(i, j)
                     visited = []
                     while queue:
                         p = queue.pop()
                         visited.append(p)
-                        next_ones = self.adjacent_squares(p[0], p[1])
+                        next_ones = adjacent_squares(p[0], p[1])
                         for n in next_ones:
-                            if not (array[n[0], n[1]] == -2 or
-                                        self.is_wall(*wall_between(p[0], p[1], n[0], n[1])) or
-                                            n in visited):
+                            if self.is_inside(*n) and not array[n[0], n[1]] == -2 and \
+                                    not self.is_wall(*wall_between(p[0], p[1], n[0], n[1])) and \
+                                    not n in visited:
                                 n_sym = symmetric_point(i, j, n[0], n[1])
                                 p_sym = symmetric_point(i, j, p[0], p[1])
-                                if (0 <= n_sym[0] < self.size[0] and 0 <= n_sym[1] < self.size[1] and
-                                                0 <= p_sym[0] < self.size[0] and 0 <= p_sym[1] < self.size[1]) and \
-                                        not (array[n_sym[0], n_sym[1]] == -2 or
-                                                 self.is_wall(*wall_between(p_sym[0], p_sym[1], n_sym[0], n_sym[1]))):
+                                if (self.is_inside(*n_sym) and self.is_inside(*p_sym)) and \
+                                        not array[n_sym[0], n_sym[1]] == -2 or \
+                                        not self.is_wall(*wall_between(p_sym[0], p_sym[1], n_sym[0], n_sym[1])):
                                     queue.append(n)
 
                     block = get_unique(np.array(visited))
                     if self.block_is_closed(block, array):
                         for b in block:
                             array[b[0], b[1]] = self.puzzle[i, j]
+
+    def find_blocked_regions(self):
+        """Finds parts of blocks with all walls checked and one dot.
+        Then fills symmetric part of that block."""
+        count = 0
+        for i, row in enumerate(self.solution):
+            for j, el in enumerate(row):
+                if i % 2 == 0 and j % 2 == 0 and el == 0:
+                    queue = []
+                    dots = []
+
+                    for p in adjacent_squares(i, j):
+                        pos_wall = wall_between(i, j, p[0], p[1])
+                        cor_dot = self.dot_in_corner(i, j, p[0], p[1])
+                        if self.is_inside(*pos_wall) and self.solution[pos_wall[0], pos_wall[1]] == -2:
+                            dots.append(pos_wall)
+                        elif not self.is_wall(*pos_wall) and self.is_inside(*p) and self.solution[p[0], p[1]] == -2:
+                            dots.append(p)
+                        elif not self.is_wall(*pos_wall):
+                            queue.append(p)
+                        if not cor_dot == [-1, -1]:
+                            dots.append(cor_dot)
+                    visited = [[i, j]]
+                    while queue and len(dots) < 2:
+                        p = queue.pop()
+                        sym_part = False
+                        if len(dots) == 1:
+                            for d in dots:
+                                s = symmetric_point(d[0], d[1], p[0], p[1])
+                                if [s[0], s[1]] in visited:
+                                    sym_part = True
+                        if not sym_part:
+                            visited.append(p)
+                            next_ones = adjacent_squares(p[0], p[1])
+                            for n in next_ones:
+                                pos_wall = wall_between(p[0], p[1], n[0], n[1])
+                                if n not in visited and not self.is_wall(*pos_wall):
+                                    corner_dot = self.dot_in_corner(n[0], n[1], p[0], p[1])
+                                    if self.is_inside(*pos_wall) and self.solution[pos_wall[0], pos_wall[1]] == -2 \
+                                            and pos_wall not in dots:
+                                        dots.append(pos_wall)
+                                    elif self.is_inside(*n) and self.solution[n[0], n[1]] == -2 and n not in dots:
+                                        dots.append(n)
+                                    elif self.is_inside(*n):
+                                        queue.append(n)
+                                    if not corner_dot == [-1, -1] and corner_dot not in dots:
+                                        dots.append(corner_dot)
+                    block = get_unique(np.array(visited))
+                    if len(dots) == 1 and len(block) > 0:
+                        dot = dots[0]
+                        count += self.fill_from_dot(dot[0], dot[1], k=0, block=block)
+        return count
 
     def block_is_closed(self, block, array):
         """Checks if all walls around block are closed."""
@@ -281,15 +388,6 @@ class SymAPixSolver:
                 return False
         return True
 
-    def closest_closed(self, i, j, array):
-        """Checks if closest block to dot are filled."""
-        block = define_block(i, j)
-        closed = True
-        for b in block:
-            if array[b[0], b[1]] < 1:
-                closed = False
-        return closed
-
     def is_wall(self, x, y):
         """Checks if point is wall."""
         if x in [-1, self.size[0]]:
@@ -299,6 +397,12 @@ class SymAPixSolver:
         elif 0 <= x < self.size[0] and 0 <= y < self.size[1] and self.solution[x, y] == 1:
             return True
         return False
+
+    def is_inside(self, i, j):
+        if 0 <= i < self.size[0] and 0 <= j < self.size[1]:
+            return True
+        else:
+            return False
 
     def is_solved(self):
         """Checks if puzzle is finished: if all squares are -2 or -3"""
