@@ -129,14 +129,16 @@ class SymAPixSolver:
         self.init_fill()
         self.fill_smallest()
         self.check_closed()
-        for i in range(1, 20):
-            count = self.find_blocked_regions()
-            print(i, count)
-            self.check_closed()
-            self.fill_smallest()
-            self.check_closed()
-            if i % 8 == 0:
-                count = self.fill(i)
+        for i in range(2, 20):
+            count = 1
+            while count > 0:
+                count = self.find_blocked_regions()
+                print(i, count)
+                self.check_closed()
+                self.fill_smallest()
+                self.check_closed()
+            for k in range(0, i):
+                count = self.fill(k)
                 self.check_closed()
                 print(count)
 

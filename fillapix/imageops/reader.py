@@ -31,7 +31,7 @@ class FillAPixReader:
         Creates new puzzle. Detects lines on image.
         :return: puzzle
         """
-        self.rho_horizontal, self.rho_vertical = get_line_positions(self.img_gray)
+        self.rho_horizontal, self.rho_vertical = get_line_positions(self.img_gray, 200)
         puzzle = Container((len(self.rho_horizontal) - 1, len(self.rho_vertical) - 1))
 
         for i in range(len(self.rho_horizontal) - 1):

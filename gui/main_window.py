@@ -114,6 +114,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def load_sym_from_file(self):
         """Loads sym-a-pix puzzle from file."""
+        self.status_bar.showMessage('Solving...')
         file_name = QtGui.QFileDialog.getOpenFileName(self, 'Zapisz plik', '.')
         try:
             self.change_curr_game(1)
@@ -122,7 +123,6 @@ class MainWindow(QtGui.QMainWindow):
             self.horizontal_lines, self.vertical_lines = reader.get_lines()
             self.solver = SymAPixSolver(self.puzzle)
             self.game_size = self.solver.size
-
             self.solver.solve()
             self.draw_game()
             self.status_bar.showMessage('Loaded puzzle from file: {}'.format(file_name.split('/')[-1]))
@@ -153,6 +153,7 @@ class MainWindow(QtGui.QMainWindow):
 
     def load_fill_from_file(self):
         """Loads fill-a-pix puzzle from file."""
+        self.status_bar.showMessage('Solving...')
         file_name = QtGui.QFileDialog.getOpenFileName(self, 'Zapisz plik', '.')
         try:
             self.change_curr_game(2)
@@ -304,7 +305,7 @@ class MainWindow(QtGui.QMainWindow):
         self.painter.begin(self.pix_map)
         self.painter.setWindow(0, 0, (self.vertical_lines + 1) * SQUARE, (self.horizontal_lines + 1) * SQUARE)
         pen = QtGui.QPen()
-        pen.setColor(Qt.black)
+        pen.setColor(Qt.darkGray)
         pen.setWidth(3)
         self.painter.setPen(pen)
         for i, row in enumerate(curr_user_solution):

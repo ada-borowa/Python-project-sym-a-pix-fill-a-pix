@@ -63,26 +63,15 @@ class FillAPixSolver:
                 if i in [0, self.size[0] - 1] or j in [0, self.size[1] - 1]:
                     self.special_case(i, j)
         self.fill()
-        count = 0
+        count = 1
         while not self.is_solved():
-            for i in range(0, self.size[0]):
-                for j in range(0, self.size[1]):
-                    if self.puzzle[i, j] < 10:
-                        self.find_2_clue_logic(i, j)
             self.fill()
-
-            for i in range(0, self.size[0]):
-                for j in range(0, self.size[1]):
-                    if self.puzzle[i, j] < 10:
-                        self.find_3_clue_logic(i, j)
+            self.find_clues()
             self.fill()
-
-            for i in range(0, self.size[0]):
-                for j in range(0, self.size[1]):
-                    if self.puzzle[i, j] < 10:
-                        self.find_ASA(i, j)
-            self.fill()
-            if count == 10:
+            if count % 5 == 0:
+                self.random_solver()
+            self.correct_solution()
+            if count > 199:
                 break
             count += 1
 
@@ -101,6 +90,15 @@ class FillAPixSolver:
 
             if changed == 0:
                 break
+
+    def find_clues(self):
+        """Find 3 types of clues."""
+        for i in range(0, self.size[0]):
+            for j in range(0, self.size[1]):
+                if self.puzzle[i, j] < 10:
+                    self.find_2_clue_logic(i, j)
+                    self.find_3_clue_logic(i, j)
+                    self.find_ASA(i, j)
 
     def find_2_clue_logic(self, x, y):
         """Finds advanced 2 clue logic for point x, y if possible:
@@ -157,7 +155,7 @@ class FillAPixSolver:
                         self.assign_to_array(el1_alone, -1)
                         self.assign_to_array(el2_alone, 1)
 
-    def find_3_clue_logic(self, x, y):
+    def find_3_clue_logic(self, x, y, case1=True):
         """Finds 3 clue logic for point x, y (if possible)."""
         el1 = self.puzzle[x, y]
         if el1 == 100:
@@ -179,36 +177,36 @@ class FillAPixSolver:
                             for b in range(max(0, el3_y - 1), min(el3_y + 2, self.size[1]))]
                 A_only = get_unique(np.array([a for a in el1_hood if a not in el2_hood and a not in el3_hood]))
                 B_but_not_A = get_unique(np.array([a for a in el2_hood + el3_hood if a not in el1_hood]))
-                # A_and_one_B = get_unique(np.array([a for a in el1_hood if xor(a in el2_hood, a in el3_hood)]))
-                A_and_all_B = get_unique(np.array([a for a in el1_hood if a in el2_hood + el3_hood]))
+                A_and_all_B = get_unique(np.array([a for a in el1_hood if a in el2_hood and a in el3_hood]))
                 if el1 == len(A_only) + el2 + el3:
                     self.assign_to_array(A_only, 1)
                     self.assign_to_array(B_but_not_A, -1)
                     self.assign_to_array(A_and_all_B, -1)
         # second case
-        neighbours = self.get_neighbours(x, y, False)
-        if len(neighbours) >= 2:
-            neighbours_pairs = get_unique(np.array([(a, b) for a in neighbours for b in neighbours if a != b]))
-            for pair in neighbours_pairs:
-                el2_x, el2_y = pair[0]
-                el3_x, el3_y = pair[1]
-                el1_hood = [(a, b) for a in range(max(0, x - 1), min(x + 2, self.size[0]))
-                            for b in range(max(0, y - 1), min(y + 2, self.size[1]))]
-                el2 = self.puzzle[el2_x, el2_y]
-                el2_hood = [(a, b) for a in range(max(0, el2_x - 1), min(el2_x + 2, self.size[0]))
-                            for b in range(max(0, el2_y - 1), min(el2_y + 2, self.size[1]))]
-                el3 = self.puzzle[el3_x, el3_y]
-                el3_hood = [(a, b) for a in range(max(0, el3_x - 1), min(el3_x + 2, self.size[0]))
-                            for b in range(max(0, el3_y - 1), min(el3_y + 2, self.size[1]))]
-                el2 -= len([a for a in el2_hood if a not in el1_hood and self.solution[a] == 1])
-                el3 -= len([a for a in el3_hood if a not in el1_hood and self.solution[a] == 1])
-                A_only = get_unique(np.array([a for a in el1_hood if a not in el2_hood and a not in el3_hood]))
-                B_but_not_A = get_unique(np.array([a for a in el2_hood + el3_hood
-                                                   if a not in el1_hood and self.solution[a] == 0]))
-                A_and_one_B = get_unique(np.array([a for a in el1_hood if xor(a in el2_hood, a in el3_hood)]))
-                # A_and_all_B = get_unique(np.array([a for a in el1_hood if a in el2_hood + el3_hood]))
-                if el1 == el2 + el3 and len(B_but_not_A) == 0 and el1 < len(A_and_one_B):
-                    self.assign_to_array(A_only, -1)
+        if case1:
+            neighbours = self.get_neighbours(x, y, False)
+            if len(neighbours) >= 2:
+                neighbours_pairs = get_unique(np.array([(a, b) for a in neighbours for b in neighbours if a != b]))
+                for pair in neighbours_pairs:
+                    el2_x, el2_y = pair[0]
+                    el3_x, el3_y = pair[1]
+                    el1_hood = [(a, b) for a in range(max(0, x - 1), min(x + 2, self.size[0]))
+                                for b in range(max(0, y - 1), min(y + 2, self.size[1]))]
+                    el2 = self.puzzle[el2_x, el2_y]
+                    el2_hood = [(a, b) for a in range(max(0, el2_x - 1), min(el2_x + 2, self.size[0]))
+                                for b in range(max(0, el2_y - 1), min(el2_y + 2, self.size[1]))]
+                    el3 = self.puzzle[el3_x, el3_y]
+                    el3_hood = [(a, b) for a in range(max(0, el3_x - 1), min(el3_x + 2, self.size[0]))
+                                for b in range(max(0, el3_y - 1), min(el3_y + 2, self.size[1]))]
+                    el2 -= len([a for a in el2_hood if a not in el1_hood and self.solution[a] == 1])
+                    el3 -= len([a for a in el3_hood if a not in el1_hood and self.solution[a] == 1])
+                    A_only = get_unique(np.array([a for a in el1_hood if a not in el2_hood and a not in el3_hood]))
+                    B_but_not_A = get_unique(np.array([a for a in el2_hood + el3_hood
+                                                       if a not in el1_hood and self.solution[a] == 0]))
+                    A_and_one_B = get_unique(np.array([a for a in el1_hood if xor(a in el2_hood, a in el3_hood)]))
+                    # A_and_all_B = get_unique(np.array([a for a in el1_hood if a in el2_hood + el3_hood]))
+                    if el1 == el2 + el3 and len(B_but_not_A) == 0 and el1 < len(A_and_one_B):
+                        self.assign_to_array(A_only, -1)
 
     def find_ASA(self, x, y):
         """Find 3 clue logic of type ASA, for example: _ 2 6 _ 4 _"""
@@ -233,6 +231,31 @@ class FillAPixSolver:
         to_insert = [a for a in hood if a not in el1_hood]
         self.assign_to_array(to_insert, -1)
 
+    def random_solver(self):
+        queue = []
+        for i in range(0, self.size[0]):
+            for j in range(0, self.size[1]):
+                if self.puzzle[i, j] - self.filled_sure(i, j) == 1:
+                    queue.append([i, j])
+        if len(queue) == 0:
+            return
+
+        q = queue[np.random.randint(0, len(queue))]
+        queue2 = []
+        for n in self.get_hood(*q):
+            if self.solution[n[0], n[1]] == 0:
+                queue2.append(n)
+        for n in queue2:
+            old_solution = copy.deepcopy(self.solution)
+            self.solution[n[0], n[1]] = 1
+            self.fill()
+            self.find_clues()
+            self.fill()
+            if type(self.correct_fill()) == bool:
+                break
+            else:
+                self.solution = copy.deepcopy(old_solution)
+
     def get_neighbours(self, x, y, close):
         """
         Checks if points has 2 neighbours - for 3 clue logic
@@ -254,6 +277,10 @@ class FillAPixSolver:
                      j not in range(max(0, y - 1), min(y + 2, self.size[1]))) and self.puzzle[i, j] < 10:
                         neighbours.append([i, j])
         return neighbours
+
+    def get_hood(self, x, y):
+        return [[a, b] for a in range(max(0, x - 1), min(x + 2, self.size[0]))
+                for b in range(max(0, y - 1), min(y + 2, self.size[1]))]
 
     def special_case(self, x, y):
         """Checks for special case: two 3: one on border, one next to it not on border,
@@ -404,7 +431,13 @@ class FillAPixSolver:
                 if el < 10:
                     if self.filled_sure(i, j) > el:
                         return i, j
+                    elif self.empty_sure(i, j) > self.size_of_hood(i, j) - el:
+                        return i, j
         return True
+
+    def correct_solution(self):
+        while type(self.correct_fill()) is not bool:
+            self.reset_hood(*self.correct_fill())
 
     def print_solution(self):
         """Prints solution, for visual testing."""
