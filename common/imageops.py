@@ -36,14 +36,16 @@ def get_unique_lines(rhos):
     return tmp
 
 
-def get_line_positions(img):
+def get_line_positions(img, sensitivity=100):
     """
     Using Hough transformation detects lines on image
     :param img: Image
     :return: positions of horizontal and vertical lines
     """
     edges = cv2.Canny(img, 50, 150, apertureSize=3)
-    lines = cv2.HoughLines(edges, 1, np.pi / 180, 100)
+    lines = cv2.HoughLines(edges, 1, np.pi / 180, sensitivity)
+    if lines is None:
+        lines = cv2.HoughLines(edges, 1, np.pi / 180, int(sensitivity/2))
 
     rho_horizontal = []
     rho_vertical = []
