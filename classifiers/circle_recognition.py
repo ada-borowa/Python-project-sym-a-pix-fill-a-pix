@@ -28,14 +28,14 @@ if __name__ == '__main__':
         labels = []
         empty_size = len([name for name in os.listdir(data_dir + d + dirs_label[0])])
         circle_size = len([name for name in os.listdir(data_dir + d + dirs_label[1])])
-        iters = np.random.choice([i for i in range(0, empty_size)], int(circle_size))
+        iters = np.random.choice(int(empty_size), int(2*empty_size))
         for l, dl in enumerate(dirs_label):
             for i, y in enumerate(sorted(glob.glob(data_dir + d + dl + '/*'))):
-                # if l == 1 or l == 0 and i in iters:
-                img = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
-                img = cv2.resize(img, (20, 20))
-                images.append(img)
-                labels.append(l)
+                if l == 1 or l == 0 and i in iters:
+                    img = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
+                    img = cv2.resize(img, (20, 20))
+                    images.append(img)
+                    labels.append(l)
         images = np.array(images).reshape((len(labels), -1))
         labels = np.array(labels)
         classifier = SVC(gamma=0.00001)
