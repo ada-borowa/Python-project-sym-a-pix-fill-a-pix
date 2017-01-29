@@ -10,6 +10,7 @@ from fillapix.puzzle import container as fc
 from symapix.puzzle import container as sc
 from symapix.imageops.reader import SymAPixReader
 from symapix.solver.solver import SymAPixSolver
+from symapix.puzzle.generator import Generator
 from fillapix.imageops.reader import FillAPixReader
 from fillapix.solver.solver import FillAPixSolver
 from gui.generate_fill_dialog import GenerateFillDialog
@@ -144,11 +145,13 @@ class MainWindow(QtGui.QMainWindow):
         self.change_curr_game(1)
         self.puzzle = sc.Container((height, width))
         self.puzzle.set_colors(color)
-        solution = self.puzzle.generate_random()
         self.horizontal_lines, self.vertical_lines = width + 1, height + 1
         self.solver = SymAPixSolver(self.puzzle)
         self.game_size = self.solver.size
-        self.solver.set_solution(solution)
+        generator = Generator(self.solver, self.puzzle)
+        generator.generate_random()
+        self.solver.solve()
+        generator.fill_dots()
         self.draw_game()
 
     def load_fill_from_file(self):

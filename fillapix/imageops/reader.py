@@ -45,8 +45,8 @@ class FillAPixReader:
         :param y: position
         :return: part of an image
         """
-        img = self.img_gray[2 + self.rho_horizontal[x]: self.rho_horizontal[x + 1],
-                             2 + self.rho_vertical[y]: self.rho_vertical[y + 1] - 1]
+        img = self.img_gray[2 + self.rho_horizontal[x]: self.rho_horizontal[x + 1] - 2,
+                            2 + self.rho_vertical[y]: self.rho_vertical[y + 1] - 2]
         return img
 
     def get_lines(self):

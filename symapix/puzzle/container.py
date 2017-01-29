@@ -34,13 +34,22 @@ class Container:
            :param: size: width and height of puzzle
            :returns: None
         """
-        self.size = size
-        self.puzzle = np.zeros((self.size[0] * 2 - 1, self.size[1] * 2 - 1)) - 1
+        self.size = (size[0] * 2 - 1, size[1] * 2 - 1)
+        # print(self.size)
+        self.puzzle = np.zeros((self.size[0], self.size[1])) - 1
         self.colors = []
         self.sq_clf = pickle.load(classifier.get('square'))
         self.horiz_clf = pickle.load(classifier.get('horizontal'))
         self.vert_clf = pickle.load(classifier.get('vertical'))
         self.x_clf = pickle.load(classifier.get('x'))
+
+    def set_puzzle(self, puzzle):
+        """
+        Sets puzzle from given array
+        :param puzzle: new puzzle
+        :return:
+        """
+        self.puzzle = puzzle
 
     def get_board(self):
         """Returns puzzle board."""
@@ -125,10 +134,3 @@ class Container:
     def get_colors(self):
         """Returns list of colors."""
         return self.colors
-
-    def generate_random(self):
-        """Generates random sym-a-pix puzzle.
-        :returns: solution of generated game"""
-        solution = np.zeros(self.puzzle.shape)
-
-        return solution

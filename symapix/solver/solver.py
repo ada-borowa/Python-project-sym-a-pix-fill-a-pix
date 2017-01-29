@@ -129,18 +129,15 @@ class SymAPixSolver:
         self.init_fill()
         self.fill_smallest()
         self.check_closed()
-        for i in range(2, 20):
-            count = 1
-            while count > 0:
-                count = self.find_blocked_regions()
-                print(i, count)
-                self.check_closed()
-                self.fill_smallest()
-                self.check_closed()
-            for k in range(0, i):
-                count = self.fill(k)
-                self.check_closed()
-                print(count)
+        # for i in range(1, limit):
+        count = 1
+        while count > 0:
+            count = self.find_blocked_regions()
+            self.check_closed()
+            self.fill_smallest()
+            self.check_closed()
+        if self.is_solved():
+            self.correct_solution()
 
     def init_fill(self):
         """Fills obvious lines between two dots: if two squares contain dot or part of dot there is line."""
@@ -163,15 +160,15 @@ class SymAPixSolver:
         if x % 2 == 0 and y % 2 == 0:
             for i in range(max(x - 1, 0), min(x + 2, self.size[0])):
                 for j in range(max(y - 1, 0), min(y + 2, self.size[1])):
-                    if self.solution[i, j] == -2:
+                    if self.puzzle[i, j] > 0:
                         return True
         elif x % 2 == 0:
             for j in range(y - 1, y + 2):
-                if self.solution[x, j] == -2:
+                if self.puzzle[x, j] > 0:
                     return True
         elif y % 2 == 0:
             for i in range(x - 1, x + 2):
-                if self.solution[i, y] == -2:
+                if self.puzzle[i, y] > 0:
                     return True
         return False
 
@@ -179,12 +176,13 @@ class SymAPixSolver:
         """Checks if any corner of square has dot"""
         if x % 2 > 0 or y % 2 > 0:
             return [-1, -1]
+        corners = []
         if x == i:
-            corners = [[x - 1, int((y + j)/2)], [x + 1, int((y + j)/2)]]
+            corners = [[x - 1, int((y + j) / 2)], [x + 1, int((y + j) / 2)]]
         elif y == j:
-            corners = [[int((x + i)/2), y - 1], [int((x + 1)/2), y + 1]]
+            corners = [[int((x + i) / 2), y - 1], [int((x + i) / 2), y + 1]]
         for c in corners:
-            if self.is_inside(*c) and self.solution[c[0], c[1]] == -2:
+            if self.is_inside(*c) and self.puzzle[c[0], c[1]] > 0:
                 return c
         return [-1, -1]
 
@@ -202,7 +200,7 @@ class SymAPixSolver:
         dots = []
         for i in range(max(x - 1, 0), min(x + 2, self.size[0])):
             for j in range(max(y - 1, 0), min(y + 2, self.size[1])):
-                if self.solution[i, j] == -2:
+                if self.puzzle[i, j] > 0:
                     dots.append([i, j])
         return dots
 
@@ -211,7 +209,7 @@ class SymAPixSolver:
         count = 0
         for x in range(0, self.size[0]):
             for y in range(0, self.size[1]):
-                if self.solution[x, y] == -2:
+                if self.puzzle[x, y] > 0:
                     frame = define_frame(x, y)
                     for wall in frame:
                         if self.is_wall(*wall):
@@ -226,7 +224,7 @@ class SymAPixSolver:
         count = 0
         for i, row in enumerate(self.solution):
             for j, el in enumerate(row):
-                if self.solution[i, j] == -2 and not closest_closed(i, j, self.solution):
+                if self.puzzle[i, j] > 0 and not closest_closed(i, j, self.solution):
                     count += self.fill_from_dot(i, j, k)
         return count
 
@@ -254,12 +252,12 @@ class SymAPixSolver:
                 if n not in visited:
                     if len(block) > 0:
                         if n in block:
-                            if not (self.is_inside(*wall) and self.solution[wall[0], wall[1]] == -2) \
-                                    and not (self.is_inside(*n) and self.solution[n[0], n[1]] == -2):
+                            if not (self.is_inside(*wall) and self.puzzle[wall[0], wall[1]] > 0) \
+                                    and not (self.is_inside(*n) and self.solution[n[0], n[1]] < 0):
                                 next_ones.append(n)
                     else:
-                        if not (self.is_inside(*wall) and self.solution[wall[0], wall[1]] == -2) \
-                                and not (self.is_inside(*n) and self.solution[n[0], n[1]] == -2):
+                        if not (self.is_inside(*wall) and self.puzzle[wall[0], wall[1]] > 0) \
+                                and not (self.is_inside(*n) and self.puzzle[n[0], n[1]] > 0):
                             next_ones.append(n)
             for n in next_ones:
                 n_sym = symmetric_point(i, j, n[0], n[1])
@@ -268,12 +266,12 @@ class SymAPixSolver:
                 curr_wall = wall_between(p[0], p[1], n[0], n[1])
                 if self.is_wall(*curr_wall) and \
                         self.is_inside(*new_wall) and not (self.is_wall(*new_wall)
-                                                           or self.solution[new_wall[0], new_wall[1]] == -2):
+                                                           or self.puzzle[new_wall[0], new_wall[1]] > 0):
                     self.solution[new_wall[0], new_wall[1]] = 1
                     count += 1
                 if self.is_wall(*new_wall) and \
                         self.is_inside(*curr_wall) and not (self.is_wall(*curr_wall)
-                                                            or self.solution[curr_wall[0], curr_wall[1]] == -2):
+                                                            or self.puzzle[curr_wall[0], curr_wall[1]] > 0):
                     self.solution[curr_wall[0], curr_wall[1]] = 1
                     count += 1
             if not no_queue:
@@ -290,20 +288,15 @@ class SymAPixSolver:
 
         return count
 
-    def check_closed(self, user=False):
+    def check_closed(self):
         """
         Checks if there are new closed blocks.
         :param user: if True, sets user solution, otherwise game's solution
         :return: None
         """
-        if user:
-            array = self.user_solution
-        else:
-            array = self.solution
-
-        for i, row in enumerate(array):
+        for i, row in enumerate(self.solution):
             for j, el in enumerate(row):
-                if array[i, j] == -2 and not closest_closed(i, j, array):
+                if self.puzzle[i, j] > 0 and not closest_closed(i, j, self.solution):
                     queue = define_block(i, j)
                     visited = []
                     while queue:
@@ -311,20 +304,20 @@ class SymAPixSolver:
                         visited.append(p)
                         next_ones = adjacent_squares(p[0], p[1])
                         for n in next_ones:
-                            if self.is_inside(*n) and not array[n[0], n[1]] == -2 and \
+                            if self.is_inside(*n) and not self.puzzle[n[0], n[1]] < 0 and \
                                     not self.is_wall(*wall_between(p[0], p[1], n[0], n[1])) and \
                                     not n in visited:
                                 n_sym = symmetric_point(i, j, n[0], n[1])
                                 p_sym = symmetric_point(i, j, p[0], p[1])
                                 if (self.is_inside(*n_sym) and self.is_inside(*p_sym)) and \
-                                        not array[n_sym[0], n_sym[1]] == -2 or \
+                                        not self.puzzle[n_sym[0], n_sym[1]] < 0 or \
                                         not self.is_wall(*wall_between(p_sym[0], p_sym[1], n_sym[0], n_sym[1])):
                                     queue.append(n)
 
                     block = get_unique(np.array(visited))
-                    if self.block_is_closed(block, array):
+                    if self.block_is_closed(block, self.solution):
                         for b in block:
-                            array[b[0], b[1]] = self.puzzle[i, j]
+                            self.solution[b[0], b[1]] = self.puzzle[i, j]
 
     def find_blocked_regions(self):
         """Finds parts of blocks with all walls checked and one dot.
@@ -335,20 +328,20 @@ class SymAPixSolver:
                 if i % 2 == 0 and j % 2 == 0 and el == 0:
                     queue = []
                     dots = []
+                    visited = [[i, j]]
 
                     for p in adjacent_squares(i, j):
                         pos_wall = wall_between(i, j, p[0], p[1])
                         cor_dot = self.dot_in_corner(i, j, p[0], p[1])
-                        if self.is_inside(*pos_wall) and self.solution[pos_wall[0], pos_wall[1]] == -2:
+                        if self.is_inside(*pos_wall) and self.puzzle[pos_wall[0], pos_wall[1]] > 0:
                             dots.append(pos_wall)
-                        elif not self.is_wall(*pos_wall) and self.is_inside(*p) and self.solution[p[0], p[1]] == -2:
+                        elif not self.is_wall(*pos_wall) and self.is_inside(*p) and self.puzzle[p[0], p[1]] > 0:
                             dots.append(p)
                         elif not self.is_wall(*pos_wall):
                             queue.append(p)
                         if not cor_dot == [-1, -1]:
                             dots.append(cor_dot)
-                    visited = [[i, j]]
-                    while queue and len(dots) < 2:
+                    while queue:
                         p = queue.pop()
                         sym_part = False
                         if len(dots) == 1:
@@ -363,12 +356,12 @@ class SymAPixSolver:
                                 pos_wall = wall_between(p[0], p[1], n[0], n[1])
                                 if n not in visited and not self.is_wall(*pos_wall):
                                     corner_dot = self.dot_in_corner(n[0], n[1], p[0], p[1])
-                                    if self.is_inside(*pos_wall) and self.solution[pos_wall[0], pos_wall[1]] == -2 \
+                                    if self.is_inside(*pos_wall) and self.puzzle[pos_wall[0], pos_wall[1]] > 0 \
                                             and pos_wall not in dots:
                                         dots.append(pos_wall)
-                                    elif self.is_inside(*n) and self.solution[n[0], n[1]] == -2 and n not in dots:
+                                    elif self.is_inside(*n) and self.puzzle[n[0], n[1]] > 0 and n not in dots:
                                         dots.append(n)
-                                    elif self.is_inside(*n):
+                                    elif self.is_inside(*n) and n not in visited and n not in dots:
                                         queue.append(n)
                                     if not corner_dot == [-1, -1] and corner_dot not in dots:
                                         dots.append(corner_dot)
@@ -376,6 +369,8 @@ class SymAPixSolver:
                     if len(dots) == 1 and len(block) > 0:
                         dot = dots[0]
                         count += self.fill_from_dot(dot[0], dot[1], k=0, block=block)
+                    elif len(dots) > 1 and len(block) > 0:
+                        self.test_dots(i, j, dots)
         return count
 
     def block_is_closed(self, block, array):
@@ -390,13 +385,40 @@ class SymAPixSolver:
                 return False
         return True
 
-    def is_wall(self, x, y):
+    def test_dots(self, x, y, dots):
+        """
+        Tests from x, y to dots if it can be filled
+        :param x: starting position
+        :param y: starting position
+        :param dots: list of dots to be tested
+        :return:
+        """
+        ok_dots = []
+        for d in dots:
+            p = symmetric_point(d[0], d[1], x, y)
+            if self.is_inside(*p) and self.solution[p[0], p[1]] == 0:
+                ok_dots.append(d)
+        if len(ok_dots) == 1:
+            d = ok_dots[0]
+            walls = define_frame(x, y)
+            for w in walls:
+                sym_w = symmetric_point(d[0], d[1], w[0], w[1])
+                if self.is_wall(*w) and self.is_inside(*sym_w):
+                    self.solution[sym_w[0], sym_w[1]] = 1
+                elif self.is_wall(*sym_w) and self.is_inside(*w):
+                    self.solution[w[0], w[1]] = 1
+
+    def is_wall(self, x, y, user=False):
         """Checks if point is wall."""
+        if user:
+            array = self.user_solution
+        else:
+            array = self.solution
         if x in [-1, self.size[0]]:
             return True
         elif y in [-1, self.size[1]]:
             return True
-        elif 0 <= x < self.size[0] and 0 <= y < self.size[1] and self.solution[x, y] == 1:
+        elif 0 <= x < self.size[0] and 0 <= y < self.size[1] and array[x, y] == 1:
             return True
         return False
 
@@ -410,13 +432,34 @@ class SymAPixSolver:
         """Checks if puzzle is finished: if all squares are -2 or -3"""
         for i in range(0, self.size[0], 2):
             for j in range(0, self.size[1], 2):
-                if self.solution[i, j] > -2:
+                if self.solution[i, j] == 0:
                     return False
         return True
 
-    def correct_fill(self):
-        """Checks if game is currently correctly filled."""
-        pass
+    def correct_solution(self):
+        """Corrects solution."""
+        for i in range(0, self.size[0]):
+            for j in range(0, self.size[1]):
+                if self.puzzle[i, j] > 0:
+                    queue = define_block(i, j)
+                    visited = []
+                    while queue:
+                        q = queue.pop()
+                        visited.append(q)
+                        for p in adjacent_squares(*q):
+                            p_sym = symmetric_point(i, j, *p)
+                            q_sym = symmetric_point(i, j, *q)
+                            pos_wall = wall_between(p[0], p[1], q[0], q[1])
+                            sym_wall = wall_between(p_sym[0], p_sym[1], q_sym[0], q_sym[1])
+                            if not self.is_wall(*pos_wall) and not self.is_wall(*sym_wall) and p not in visited:
+                                queue.append(p)
+                            elif self.is_wall(*pos_wall) and not self.is_wall(*sym_wall):
+                                self.solution[sym_wall[0], sym_wall[1]] = 1
+                            elif not self.is_wall(*pos_wall) and self.is_wall(*sym_wall):
+                                self.solution[pos_wall[0], pos_wall[1]] = 1
+                    block = get_unique(visited)
+                    for b in block:
+                        self.solution[b[0], b[1]] = self.puzzle[i, j]
 
     def print_solution(self):
         """Prints solution, for testing."""
@@ -479,16 +522,50 @@ class SymAPixSolver:
         if 0 <= i < self.size[0] and 0 <= j < self.size[1]:
             return self.user_solution[i, j]
 
+    def clear_user_board(self):
+        for i in range(0, self.size[0], 2):
+            for j in range(0, self.size[1], 2):
+                self.user_solution[i, j] = 0
+
     def set_user_value(self, x, y, val):
         """Sets value chosen by user."""
+        self.clear_user_board()
         self.user_solution[x, y] = val
         self.update_user_filling()
 
     def update_user_filling(self):
-        self.check_closed(user=True)
+        """Updates blcoked regions and fills/unfills them."""
+        for i in range(self.size[0]):
+            for j in range(self.size[1]):
+                if self.puzzle[i, j] > 0:
+                    block = []
+                    if self.block_is_closed(define_block(i, j), self.user_solution):
+                        block = define_block(i, j)
+                    else:
+                        queue = define_block(i, j)
+                        visited = []
+                        search = True
+                        while queue and search:
+                            p = queue.pop()
+                            visited.append(p)
+                            next_ones = adjacent_squares(p[0], p[1])
+                            for n in next_ones:
+                                if self.is_inside(*n) and n not in visited:
+                                    if not self.is_wall(*wall_between(p[0], p[1], n[0], n[1]), True):
+                                        queue.append(n)
+                                    if self.puzzle[n[0], n[1]] > 0 and \
+                                            not self.is_wall(*wall_between(p[0], p[1], n[0], n[1])):
+                                        search = False
+                                        break
+                        if search:
+                            block = get_unique(np.array(visited))
+                    if len(block) > 0:
+                        if self.block_is_closed(block, self.user_solution):
+                            for b in block:
+                                self.user_solution[b[0], b[1]] = self.puzzle[i, j]
         for i, row in enumerate(self.user_solution):
             for j, el in enumerate(row):
-                self.fill_color[i, j] = el if i % 2 == 0 and j % 2 == 0 and el > 0 else -1
+                self.fill_color[i, j] = el if i % 2 == 0 and j % 2 == 0 and el > 0 else 0
 
     def set_solved(self):
         """Sets user solution to real solution."""
@@ -506,8 +583,17 @@ class SymAPixSolver:
         """Checks user solution. Omits unsure squares."""
         for i in range(self.size[0]):
             for j in range(self.size[1]):
-                if self.solution[i, j] != self.user_solution[i, j] and self.user_solution[i, j] != 0:
-                    return i, j
+                if not (i % 2 == 0 and j % 2 == 0) and not (i % 2 > 0 and j % 2 > 0):
+                    if self.solution[i, j] != self.user_solution[i, j] and self.user_solution[i, j] != 0:
+                        if i % 2 == 0:
+                            i /= 2
+                        else:
+                            i = (i - 1)/2
+                        if j % 2 == 0:
+                            j /= 2
+                        else:
+                            j = (j - 1)/2
+                        return int(i), int(j)
         return -1, -1
 
     def is_solved_by_user(self):
@@ -515,8 +601,9 @@ class SymAPixSolver:
         count = 0
         for i in range(0, self.size[0]):
             for j in range(0, self.size[1]):
-                if self.user_solution[i, j] != self.solution[i, j]:
-                    count += 1
+                if not (i % 2 == 0 and j % 2 == 0) and not (i % 2 > 0 and j % 2 > 0):
+                    if self.user_solution[i, j] != self.solution[i, j]:
+                        count += 1
         if count == 0:
             return True
         else:
