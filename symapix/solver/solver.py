@@ -281,10 +281,11 @@ class SymAPixSolver:
                             self.is_inside(*n) and self.solution[n[0], n[1]] < 1:
                         queue.append(n)
 
-        block = get_unique(np.array(visited))
-        if self.block_is_closed(block, self.solution):
-            for b in block:
-                self.solution[b[0], b[1]] = self.puzzle[i, j]
+        if self.puzzle[i, j] > 0:
+            block = get_unique(np.array(visited))
+            if self.block_is_closed(block, self.solution):
+                for b in block:
+                    self.solution[b[0], b[1]] = self.puzzle[i, j]
 
         return count
 
@@ -313,11 +314,11 @@ class SymAPixSolver:
                                         not self.puzzle[n_sym[0], n_sym[1]] < 0 or \
                                         not self.is_wall(*wall_between(p_sym[0], p_sym[1], n_sym[0], n_sym[1])):
                                     queue.append(n)
-
-                    block = get_unique(np.array(visited))
-                    if self.block_is_closed(block, self.solution):
-                        for b in block:
-                            self.solution[b[0], b[1]] = self.puzzle[i, j]
+                    if self.puzzle[i, j] > 0:
+                        block = get_unique(np.array(visited))
+                        if self.block_is_closed(block, self.solution):
+                            for b in block:
+                                self.solution[b[0], b[1]] = self.puzzle[i, j]
 
     def find_blocked_regions(self):
         """Finds parts of blocks with all walls checked and one dot.

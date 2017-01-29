@@ -150,8 +150,14 @@ class MainWindow(QtGui.QMainWindow):
         self.game_size = self.solver.size
         generator = Generator(self.solver, self.puzzle)
         generator.generate_random()
-        self.solver.solve()
-        generator.fill_dots()
+        while not self.solver.is_solved():
+            self.solver.solve()
+            self.solver.correct_solution()
+            generator.correct_lines()
+            generator.fill_dots()
+            self.solver.correct_solution()
+            generator.correct_lines()
+            generator.remove_redundant_walls()
         self.draw_game()
 
     def load_fill_from_file(self):
