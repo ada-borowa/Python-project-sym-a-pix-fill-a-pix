@@ -31,7 +31,7 @@ class FillAPixReader:
         Creates new puzzle. Detects lines on image.
         :return: puzzle
         """
-        self.rho_horizontal, self.rho_vertical = get_line_positions(self.img_gray, 200)
+        self.rho_horizontal, self.rho_vertical = get_line_positions(self.img_gray, 150)
         puzzle = Container((len(self.rho_horizontal) - 1, len(self.rho_vertical) - 1))
 
         for i in range(len(self.rho_horizontal) - 1):
@@ -45,8 +45,8 @@ class FillAPixReader:
         :param y: position
         :return: part of an image
         """
-        img = self.img_gray[2 + self.rho_horizontal[x]: self.rho_horizontal[x + 1] - 2,
-                            2 + self.rho_vertical[y]: self.rho_vertical[y + 1] - 2]
+        img = self.img_gray[2 + self.rho_horizontal[x]: self.rho_horizontal[x + 1],
+                            2 + self.rho_vertical[y]: self.rho_vertical[y + 1] - 1]
         return img
 
     def get_lines(self):

@@ -71,7 +71,7 @@ class FillAPixSolver:
             if count % 5 == 0:
                 self.random_solver()
             self.correct_solution()
-            if count > 199:
+            if count > 39:
                 break
             count += 1
 

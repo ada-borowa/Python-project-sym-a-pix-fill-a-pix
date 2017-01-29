@@ -86,5 +86,7 @@ def get_line_positions(img, sensitivity=100):
     #     cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
     #
     # cv2.imshow('houghlines3.jpg', img)
+    # cv2.waitKey()
+    # cv2.destroyAllWindows()
 
     return rho_horizontal, rho_vertical
