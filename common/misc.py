@@ -11,6 +11,7 @@ def get_unique(a):
     :return: unique elements of array
     """
     if len(a) > 0:
+        a = np.array(a)
         b = np.ascontiguousarray(a).view(np.dtype((np.void, a.dtype.itemsize * a.shape[1])))
         _, idx = np.unique(b, return_index=True)
         return a[idx]
