@@ -196,7 +196,7 @@ class Test3ClueLogic(unittest.TestCase):
         a = 0
         for i in range(example.shape[0]):
             for j in range(example.shape[1]):
-                self.assertEqual(self.solver.get_neighbours(i, j)[0], answers[a])
+                self.assertEqual(self.solver.get_neighbours(i, j, close=False)[0], answers[a])
                 a += 1
 
     def test_3_clue_logic(self):
@@ -207,7 +207,7 @@ class Test3ClueLogic(unittest.TestCase):
                             [100, 2, 100, 100, 100],
                             [100, 100, 100, 1, 100]])
         solution = np.array([[-1, -1, 0, 0, 0],
-                             [-1, -1, 0 ,0 ,0],
+                             [-1, -1, 0, 0, 0],
                              [0, 0, 0, 0, 0],
                              [0, 0, 0, -1, -1],
                              [0, 0, 0, -1, -1]])
@@ -225,7 +225,7 @@ class Test3ClueLogic(unittest.TestCase):
                             [100, 2, 100, 100, 100],
                             [100, 100, 100, 1, 100]])
         solution = np.array([[1, -1, 0, 0, 0],
-                             [-1, -1, 0 ,0 ,0],
+                             [-1, -1, 0, 0, 0],
                              [0, 0, 0, 0, 0],
                              [0, 0, 0, -1, -1],
                              [0, 0, 0, -1, -1]])
@@ -246,7 +246,7 @@ class Test3ClueLogic(unittest.TestCase):
         self.solver.set_puzzle(example)
         for i in range(example.shape[0]):
             for j in range(example.shape[1]):
-                self.solver.find_ASA(i, j)
+                self.solver.find_asa(i, j)
         self.assertEqual(self.solver.print_solution(), answer)
 
 if __name__ == '__main__':

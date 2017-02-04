@@ -13,12 +13,13 @@ __email__ = 'ada.borowa@gmail.com'
 
 class SymAPixReader:
     """Reader for sym-a-pix puzzle."""
+
     def __init__(self, filename):
         """ Reads puzzle from picture.
         :param filename: name of file with image of puzzle.
         :return: None
         """
-        self.img_rgb = cv2.imread(filename, cv2.IMREAD_COLOR)
+        self.img_rgb = cv2.imread(str(filename), cv2.IMREAD_COLOR)
         if self.img_rgb is None:
             raise IOError('File not found')
         self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
@@ -29,7 +30,7 @@ class SymAPixReader:
 
     def create_puzzle(self):
         """
-        Creates new puzzle. Detects lines on image.
+        Creates new puzzle. Detects lines on image then cuts smaller images and passes them to container.
         :return: puzzle
         """
         self.rho_horizontal, self.rho_vertical = get_line_positions(self.img_gray)
@@ -66,26 +67,24 @@ class SymAPixReader:
         elif mode == 1:
             assert (0 < x < len(self.rho_horizontal) - 1)
             i1, i2 = 2 + (self.rho_horizontal[x - 1] + self.rho_horizontal[x]) / 2.0, \
-                     (self.rho_horizontal[x] + self.rho_horizontal[x + 1]) / 2.0 - 1
+                         (self.rho_horizontal[x] + self.rho_horizontal[x + 1]) / 2.0 - 1
             j1, j2 = 2 + self.rho_vertical[y], self.rho_vertical[y + 1] - 1
         elif mode == 2:
             assert (0 < y < len(self.rho_vertical) - 1)
             i1, i2 = 2 + self.rho_horizontal[x], self.rho_horizontal[x + 1] - 1
-            j1, j2 = 2 + (self.rho_vertical[y - 1] + self.rho_vertical[y]) / 2.0 - 1, \
-                     (self.rho_vertical[y] + self.rho_vertical[y + 1]) / 2.0 - 1
+            j1, j2 = 1 + (self.rho_vertical[y - 1] + self.rho_vertical[y]) / 2.0, \
+                         (self.rho_vertical[y] + self.rho_vertical[y + 1]) / 2.0 - 1
         elif mode == 3:
-            assert(0 < x < len(self.rho_horizontal) - 1 and 0 < y < len(self.rho_vertical) - 1)
+            assert (0 < x < len(self.rho_horizontal) - 1 and 0 < y < len(self.rho_vertical) - 1)
             i1, i2 = 2 + (self.rho_horizontal[x - 1] + self.rho_horizontal[x]) / 2.0, \
-                     (self.rho_horizontal[x] + self.rho_horizontal[x + 1]) / 2.0 - 1
-            j1, j2 = 2 + (self.rho_vertical[y - 1] + self.rho_vertical[y]) / 2.0 - 1, \
-                     (self.rho_vertical[y] + self.rho_vertical[y + 1]) / 2.0 - 1
+                         (self.rho_horizontal[x] + self.rho_horizontal[x + 1]) / 2.0 - 1
+            j1, j2 = 1 + (self.rho_vertical[y - 1] + self.rho_vertical[y]) / 2.0, \
+                         (self.rho_vertical[y] + self.rho_vertical[y + 1]) / 2.0 - 1
         else:
             i1, i2, j1, j2 = 0, 0, 0, 0
         i1, i2, j1, j2 = int(i1), int(i2), int(j1), int(j2)
-        # cv2.imwrite('cook_' + str(self.count).zfill(6) + ".jpg", self.img_rgb[i1: i2, j1: j2])
-        # self.count += 1
         return self.img_rgb[i1: i2, j1: j2]
 
     def get_lines(self):
-        """Used in visualization: return number of lines of both types."""
+        """Returns number of vertical in horizontal lines (this is also size + 1)"""
         return len(self.rho_horizontal), len(self.rho_vertical)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """ Classifier builder.
-    Gets images from folders with names corensponding to category (100 is empty square).
+    Gets images from folders with names corresponding to category (100 is empty square).
     Images are not included in this repository.
     Uses SVM.
 """
@@ -17,6 +17,7 @@ __author__ = 'Adriana Borowa'
 __email__ = 'ada.borowa@gmail.com'
 
 if __name__ == '__main__':
+    # directory containing training data
     data_dir = '../../classes/'
 
     dirs = ['horiz', 'sq', 'vert', 'x']
@@ -28,10 +29,10 @@ if __name__ == '__main__':
         labels = []
         empty_size = len([name for name in os.listdir(data_dir + d + dirs_label[0])])
         circle_size = len([name for name in os.listdir(data_dir + d + dirs_label[1])])
-        iters = np.random.choice(int(empty_size), int(2*empty_size))
+        sample = np.random.choice(int(empty_size), int(2 * empty_size))
         for l, dl in enumerate(dirs_label):
             for i, y in enumerate(sorted(glob.glob(data_dir + d + dl + '/*'))):
-                if l == 1 or l == 0 and i in iters:
+                if l == 1 or l == 0 and i in sample:
                     img = cv2.imread(y, cv2.IMREAD_GRAYSCALE)
                     img = cv2.resize(img, (20, 20))
                     images.append(img)
@@ -40,4 +41,4 @@ if __name__ == '__main__':
         labels = np.array(labels)
         classifier = SVC(gamma=0.00001)
         classifier.fit(images, labels)
-        pickle.dump(classifier, open(d + 'clf.p', 'wb'))
+        pickle.dump(classifier, open(d + 'clf.p', 'wb'), protocol=2)

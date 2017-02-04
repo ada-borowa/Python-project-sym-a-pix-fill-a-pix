@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ Main window of Sym-a-pix and Fill-a-pix solver/generator program.
 """
-
+from __future__ import division, print_function
 from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import Qt
 import sys
@@ -116,8 +116,10 @@ class MainWindow(QtGui.QMainWindow):
     def load_sym_from_file(self):
         """Loads sym-a-pix puzzle from file."""
         self.status_bar.showMessage('Solving...')
-        file_name = QtGui.QFileDialog.getOpenFileName(self, 'Zapisz plik', '.')
+        file_name = QtGui.QFileDialog.getOpenFileName(parent=self, caption='Open file', directory='.', filter='*.jpg')
         try:
+            if '.jpg' not in file_name:
+                raise IOError
             self.change_curr_game(1)
             reader = SymAPixReader(file_name)
             self.puzzle = reader.create_puzzle()
@@ -163,8 +165,10 @@ class MainWindow(QtGui.QMainWindow):
     def load_fill_from_file(self):
         """Loads fill-a-pix puzzle from file."""
         self.status_bar.showMessage('Solving...')
-        file_name = QtGui.QFileDialog.getOpenFileName(self, 'Zapisz plik', '.')
+        file_name = QtGui.QFileDialog.getOpenFileName(parent=self, caption='Open file', directory='.', filter='*.jpg')
         try:
+            if '.jpg' not in file_name:
+                raise IOError
             self.change_curr_game(2)
             reader = FillAPixReader(file_name)
             self.puzzle = reader.create_puzzle()
@@ -211,8 +215,10 @@ class MainWindow(QtGui.QMainWindow):
         """Overwrites QWidget function: catches mouse press events.
         Depending on type of game performs action.
         After that checks if game is solved."""
+        x, y = self.get_painter_pos(event.x(), event.y())
+        if x == -1 and y == -1:
+            return
         if self.curr_game == 1:
-            x, y = self.get_painter_pos(event.x(), event.y())
             if x % SQUARE < EPS:
                 self.change_line(int((x - x % SQUARE) / SQUARE * 2 - 1), int((y - y % SQUARE) / SQUARE * 2))
             elif SQUARE - EPS < x % SQUARE:
@@ -224,7 +230,6 @@ class MainWindow(QtGui.QMainWindow):
             self.draw_game()
 
         elif self.curr_game == 2:
-            x, y = self.get_painter_pos(event.x(), event.y())
             if 0 <= x < self.vertical_lines - 1 and 0 <= y < self.horizontal_lines - 1:
                 self.change_square(x, y)
                 self.draw_game()
@@ -232,7 +237,7 @@ class MainWindow(QtGui.QMainWindow):
         self.check_solved()
 
     def get_painter_pos(self, i, j):
-        """Given position of mouse click and type of game, returns clicked line or  square position."""
+        """Given position of mouse click and type of game, returns clicked line or square position."""
         i = (i - 5) * ((self.vertical_lines + 1) * SQUARE) / 800
         j = (j - 55) * ((self.horizontal_lines + 1) * SQUARE) / 800
         if self.curr_game == 1:
@@ -246,6 +251,7 @@ class MainWindow(QtGui.QMainWindow):
                 return int((i - SQUARE) / SQUARE), int((j - SQUARE) / SQUARE)
             else:
                 return -1, -1
+        return -1, -1
 
     def draw_game(self):
         """Chooses what game to draw."""
@@ -450,7 +456,7 @@ class MainWindow(QtGui.QMainWindow):
                 font.setPointSize(22)
                 self.painter.setFont(font)
                 self.painter.setPen(Qt.red)
-                self.painter.drawText(SQUARE, SQUARE, 'SOLVED!')
+                self.painter.drawText(((self.vertical_lines - 2) * SQUARE)/2, SQUARE - 1, 'SOLVED!')
                 self.painter.end()
                 self.board.setPixmap(self.pix_map)
 

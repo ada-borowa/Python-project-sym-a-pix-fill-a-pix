@@ -17,7 +17,8 @@ __email__ = 'ada.borowa@gmail.com'
 
 
 if __name__ == '__main__':
-    data_dir = 'numbers/'
+    # directory containing training data
+    data_dir = '../../numbers/'
 
     dirs = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '100']
 
@@ -34,4 +35,4 @@ if __name__ == '__main__':
     labels = np.array(labels)
     classifier = SVC(gamma=0.00001)
     classifier.fit(images, labels)
-    pickle.dump(classifier, open('digit_clf.p', 'wb'))
+    pickle.dump(classifier, open('digit_clf.p', 'wb'), protocol=2)

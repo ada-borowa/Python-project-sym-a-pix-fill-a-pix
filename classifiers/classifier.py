@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Manages classificator files.
+""" Manages classifier files.
 """
 
 __author__ = 'Adriana Borowa'
@@ -9,7 +9,7 @@ __email__ = 'ada.borowa@gmail.com'
 def get(classifier):
     """
     Gives SVM classifier file, depending on name.
-    :param classifier: name of classifier
+    :param classifier: name of classifier: [digit, horizontal, vertical, square, x]
     :return: classifier file
     """
     if classifier == 'digit':

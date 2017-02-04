@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Main window of Sym-a-pix and Fill-a-pix solver/generator program.
+""" Dialog window to choose parameters of sym-a-pix being generated.
 """
 
 from PyQt4 import QtGui

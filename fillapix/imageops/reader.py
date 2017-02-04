@@ -18,7 +18,7 @@ class FillAPixReader:
         :param filename: name of file with image of puzzle.
         :return: None
         """
-        self.img_rgb = cv2.imread(filename, cv2.IMREAD_COLOR)
+        self.img_rgb = cv2.imread(str(filename), cv2.IMREAD_COLOR)
         if self.img_rgb is None:
             raise IOError('File not found')
         self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
@@ -28,7 +28,7 @@ class FillAPixReader:
 
     def create_puzzle(self):
         """
-        Creates new puzzle. Detects lines on image.
+        Creates new puzzle. Detects lines on image, cuts image along them and passes smaller images to container.
         :return: puzzle
         """
         self.rho_horizontal, self.rho_vertical = get_line_positions(self.img_gray, 150)
@@ -51,7 +51,7 @@ class FillAPixReader:
 
     def get_lines(self):
         """
-        Used in visualization of puzzle.
+        Returns number of lines (size of a picture).
         :return: number of lines of both types.
         """
         return len(self.rho_horizontal), len(self.rho_vertical)

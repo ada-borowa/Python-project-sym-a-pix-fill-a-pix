@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-""" Main window of Sym-a-pix and Fill-a-pix solver/generator program.
+""" Dialog window to choose parameters of fill-a-pix being generated.
 """
 
 from PyQt4 import QtGui
@@ -38,7 +38,7 @@ class GenerateFillDialog(QtGui.QMainWindow):
         cw.setLayout(l)
 
     def send_values(self):
-        """Function to send user's values to generating function."""
+        """Sends user's values to generating function."""
         size = self.size_value.value()
         self.parent.generate_new_fill(size, size)
         self.size_value.setValue(10)

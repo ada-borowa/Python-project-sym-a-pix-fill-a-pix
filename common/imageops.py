@@ -10,15 +10,15 @@ import cv2
 __author__ = 'Adriana Borowa'
 __email__ = 'ada.borowa@gmail.com'
 
-DEGREE_VERTICAL = 0
-DEGREE_HORIZONTAL = 1.5708
+DEGREE_VERTICAL = 0          # 0 degrees
+DEGREE_HORIZONTAL = 1.5708   # pi/2 degrees
 EPS = 0.0001
 
 
 def get_unique_lines(rhos):
     """
     Joins lines that are to close to each other.
-    :param rhos: list of line' positions
+    :param rhos: list of lines' positions
     :return: list without duplicates
     """
     rhos.sort()
@@ -38,7 +38,8 @@ def get_unique_lines(rhos):
 
 def get_line_positions(img, sensitivity=100):
     """
-    Using Hough transformation detects lines on image
+    Using Hough transformation detects lines on image. Detects only vertical and horizontal lines.
+    :param sensitivity: Hough transformation parameter
     :param img: Image
     :return: positions of horizontal and vertical lines
     """
@@ -58,35 +59,5 @@ def get_line_positions(img, sensitivity=100):
 
     rho_horizontal = get_unique_lines(rho_horizontal)
     rho_vertical = get_unique_lines(rho_vertical)
-
-    # for rho in rho_horizontal:
-    #     theta = DEGREE_HORIZONTAL
-    #     a = np.cos(theta)
-    #     b = np.sin(theta)
-    #     x0 = a * rho
-    #     y0 = b * rho
-    #     x1 = int(x0 + 1000 * (-b))
-    #     y1 = int(y0 + 1000 * (a))
-    #     x2 = int(x0 - 1000 * (-b))
-    #     y2 = int(y0 - 1000 * (a))
-    #
-    #     cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-    #
-    # for rho in rho_vertical:
-    #     theta = DEGREE_VERTICAL
-    #     a = np.cos(theta)
-    #     b = np.sin(theta)
-    #     x0 = a * rho
-    #     y0 = b * rho
-    #     x1 = int(x0 + 1000 * (-b))
-    #     y1 = int(y0 + 1000 * (a))
-    #     x2 = int(x0 - 1000 * (-b))
-    #     y2 = int(y0 - 1000 * (a))
-    #
-    #     cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-    #
-    # cv2.imshow('houghlines3.jpg', img)
-    # cv2.waitKey()
-    # cv2.destroyAllWindows()
 
     return rho_horizontal, rho_vertical

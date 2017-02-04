@@ -6,6 +6,8 @@ import cv2
 import numpy as np
 import pickle
 import math
+import sys
+
 from classifiers import classifier
 
 __author__ = 'Adriana Borowa'
@@ -29,18 +31,24 @@ def dist(x, y):
 class Container:
     """Stores puzzle data."""
     def __init__(self, size):
-        """Initailization of container.
-           :param: size: width and height of puzzle
-           :returns: None
+        """
+        Initialization of container.
+        :param: size: width and height of puzzle
+        :returns: None
         """
         self.size = (size[0] * 2 - 1, size[1] * 2 - 1)
-        # print(self.size)
         self.puzzle = np.zeros((self.size[0], self.size[1])) - 1
         self.colors = []
-        self.sq_clf = pickle.load(classifier.get('square'))
-        self.horiz_clf = pickle.load(classifier.get('horizontal'))
-        self.vert_clf = pickle.load(classifier.get('vertical'))
-        self.x_clf = pickle.load(classifier.get('x'))
+        if sys.version_info < (3, 0):
+            self.sq_clf = pickle.load(classifier.get('square'))
+            self.horiz_clf = pickle.load(classifier.get('horizontal'))
+            self.vert_clf = pickle.load(classifier.get('vertical'))
+            self.x_clf = pickle.load(classifier.get('x'))
+        else:
+            self.sq_clf = pickle.load(classifier.get('square'), encoding='latin1')
+            self.horiz_clf = pickle.load(classifier.get('horizontal'), encoding='latin1')
+            self.vert_clf = pickle.load(classifier.get('vertical'), encoding='latin1')
+            self.x_clf = pickle.load(classifier.get('x'), encoding='latin1')
 
     def set_puzzle(self, puzzle):
         """
@@ -93,7 +101,7 @@ class Container:
 
     def print_puzzle(self):
         """
-        Prints current puzzle.
+        For tests: prints current puzzle.
         :return: None
         """
         for i, row in enumerate(self.puzzle):
