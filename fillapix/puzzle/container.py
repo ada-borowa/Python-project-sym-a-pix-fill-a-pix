@@ -96,6 +96,9 @@ class Container:
                             if solution[x, y] == 0:
                                 solution[x, y] = -1
 
-        solution[solution == -1] = 0
+        for i in range(self.size[0]):
+            for j in range(self.size[1]):
+                if solution[i, j] == 0:
+                    solution[i, j] = -1
         return solution
 
